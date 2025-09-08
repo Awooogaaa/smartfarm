@@ -84,7 +84,7 @@ if (isset($_POST['simpan'])) {
                 <label class="form-label">Gambar Produk</label>
                 <input type="file" name="gambar" class="form-control" onchange="previewImage(event)">
                 <img id="preview" class="img-thumbnail mt-2" width="150" style="display:none;">
-                <div class="form-text">Hanya JPG, JPEG, PNG, GIF. Maks 20MB.</div>
+                <div class="form-text">Hanya JPG, JPEG, PNG, GIF. Maks 2MB.</div>
             </div>
             <button type="submit" name="simpan" class="btn btn-success">💾 Simpan</button>
             <a href="index.php" class="btn btn-secondary">❌ Batal</a>

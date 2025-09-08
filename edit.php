@@ -116,7 +116,7 @@ if (isset($_POST['update'])) {
                 <label class="form-label">Ganti Foto Baru</label>
                 <input type="file" name="gambar" class="form-control" onchange="previewImage(event)">
                 <img id="preview" class="img-thumbnail mt-2" width="150" style="display:none;">
-                <div class="form-text">Hanya JPG, JPEG, PNG, GIF. Maks 20MB.</div>
+                <div class="form-text">Hanya JPG, JPEG, PNG, GIF. Maks 2MB.</div>
             </div>
             <button type="submit" name="update" class="btn btn-primary">🔄 Update</button>
             <a href="edit.php?delete=<?= $data['id'] ?>" class="btn btn-danger" onclick="return confirm('Yakin hapus produk ini?')">🗑 Hapus</a>
