@@ -9,7 +9,7 @@
   <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <style>
     body {
-      background-color: #1C1B29;
+      background-color: #EDEDED;
     }
 
     .table img {
@@ -25,48 +25,148 @@
       border-color: #1C1B29;
     }
 
-    .btn-cari {
-      background-color: #CCCCCC;
-      color: #000;
-      transition: all 0.3s ease;
+    /* Modern Search Container */
+    .search-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Enhanced Search Box */
+    .search-box {
+      position: relative;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .search-input {
+      background: #ffffffff;
+      color: #ccccccff;
+      border: 2px solid #e4e4e4ff;
+      border-radius: 50px;
+      padding: 10px 56px 10px 16px;
+      font-size: 15px;
+      height: 46px;
+      /* lebih tinggi */
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #2AF598;
+      box-shadow: 0 0 0 3px rgba(42, 245, 152, 0.1), 0 4px 20px rgba(0, 0, 0, 0.1);
+      background: #ffffff;
+      color: #495057;
+    }
+
+    .search-input::placeholder {
+      color: #adb5bd;
+      font-weight: 400;
+    }
+
+    /* Modern Search Button */
+    .btn-search {
+      position: absolute;
+      top: 50%;
+      right: 4px;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #2AF598 0%, #009EFD 100%);
       border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
     }
 
-    .btn-cari:hover {
-      background-color: #b0b0b0;
-      color: #000;
+    .btn-search svg {
+      width: 18px;
+      height: 18px;
     }
 
-    .btn-cari:active,
-    .btn-cari:focus {
-      background-color: #b0b0b0 !important;
-      color: #000 !important;
-      box-shadow: none !important;
+    .btn-search:hover {
+      transform: translateY(-50%) scale(1.05);
+      box-shadow: 0 4px 20px rgba(42, 245, 152, 0.4);
+      background: linear-gradient(135deg, #009EFD 0%, #2AF598 100%);
     }
 
+    .btn-search:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    /* Modern Reset Button */
     .btn-reset {
-      background-color: #E81313;
+      background: #dc3545;
       color: #fff;
-      transition: all 0.3s ease;
       border: none;
+      border-radius: 25px;
+      padding: 0 18px;
+      font-size: 15px;
+      height: 40px;
+      /* sejajar input */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: 0.3s;
     }
 
     .btn-reset:hover {
-      background-color: #b50f0f;
+      background: #bb2d3b;
       color: #fff;
     }
 
-    .btn-reset:active,
-    .btn-reset:focus {
-      background-color: #b50f0f !important;
-      color: #fff !important;
-      box-shadow: none !important;
+    .btn-reset:active {
+      transform: translateY(0);
     }
 
+    /* Search Form Layout */
+    .search-form {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
 
+    /* Responsive Design */
+    @media (max-width: 576px) {
+      .search-container {
+        margin: 0 1rem;
+        padding: 1.5rem;
+      }
+
+      .search-form {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .search-box {
+        max-width: 100%;
+      }
+    }
+
+    /* Search Icon Animation */
+    .search-icon {
+      transition: transform 0.3s ease;
+    }
+
+    .btn-search:hover .search-icon {
+      transform: rotate(90deg);
+    }
+
+    /* Reset Icon */
+    .reset-icon {
+      width: 16px;
+      height: 16px;
+    }
 
     .btn-custom .hover-state {
-      background-color: #E81313;
+      background-color: #000000ff;
       transform: translateY(100%);
       transition: transform 0.3s ease;
     }
@@ -86,21 +186,36 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg py-3 px-2 shadow-sm mb-4" style="background-color:#000;">
+  <nav class="navbar navbar-expand-lg py-2 px-3 shadow-sm mb-5 mx-5 my-3 rounded-pill" style="background-color:#ffffff;">
     <div class="container-fluid">
       <div>
-        <img src="logo/logog.png" alt="Logo Gudang" width="35" height="40" class="pb-2 me-1">
-        <a class="navbar-brand fw-bold fs-4 text-white" href="index.php">Manajemen Produk</a>
+        <a class="navbar-brand fw-bold fs-4 text-black" href="index.php">Manajemen Produk</a>
       </div>
+      <form method="GET" action="" class="search-form">
+        <div class="d-flex align-items-center gap-2">
+          <!-- Input + Search -->
+          <div class="search-box position-relative" style="flex:1;">
+            <input type="text"
+              class="form-control search-input"
+              name="cari"
+              placeholder="Cari produk..."
+              value="<?= isset($_GET['cari']) ? htmlspecialchars($_GET['cari']) : '' ?>">
+            <button type="submit" class="btn-search">
+              <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+          </div>
 
-      <form method="GET" action="" class="d-flex">
-        <div class="input-group">
-          <input type="text" class="form-control" name="cari" placeholder="Cari produk..."
-            value="<?= isset($_GET['cari']) ? $_GET['cari'] : '' ?>">
-          <button class="btn btn-cari" type="submit">Cari</button>
-          <a href="index.php" class="btn btn-reset">Reset</a>
+          <!-- Reset -->
+          <a href="index.php" class="btn-reset">
+            Reset
+          </a>
         </div>
       </form>
+
+
     </div>
   </nav>
 
