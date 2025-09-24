@@ -233,7 +233,12 @@
 
   <div class="container px-4" style="max-width: 1300px;">
     <?php
-    // Query produk
+    // --- PENGATURAN PAGINASI ---
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5; // Data per halaman
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $offset = ($page - 1) * $limit;
+
+    // --- PENCARIAN ---
     $where = "";
     $searchTerm = "";
     if (isset($_GET['cari']) && trim($_GET['cari']) != "") {
@@ -242,10 +247,16 @@
       $where = "WHERE kode LIKE '%$cari%' OR nama LIKE '%$cari%' OR satuan LIKE '%$cari%'";
     }
 
-    $result = mysqli_query($koneksi, "SELECT * FROM produk $where ORDER BY id DESC");
+    // --- QUERY UNTUK MENGHITUNG TOTAL DATA (DENGAN FILTER PENCARIAN) ---
+    $countQuery = mysqli_query($koneksi, "SELECT COUNT(*) as total FROM produk $where");
+    $totalData = mysqli_fetch_assoc($countQuery)['total'];
+    $totalPages = ceil($totalData / $limit);
+
+    // --- QUERY UTAMA UNTUK MENAMPILKAN DATA DENGAN LIMIT DAN OFFSET ---
+    $result = mysqli_query($koneksi, "SELECT * FROM produk $where ORDER BY id DESC LIMIT $limit OFFSET $offset");
+    
     $countAll = mysqli_query($koneksi, "SELECT COUNT(*) as total FROM produk");
     $totalProduk = mysqli_fetch_assoc($countAll)['total'];
-    $filteredCount = mysqli_num_rows($result);
     ?>
 
     <div class="main-card">
@@ -254,7 +265,9 @@
           <div class="col-md-8">
             <div class="d-flex align-items-center flex-wrap gap-3">
               <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Daftar Produk</h4>
-              <span class="stats-badge"><i class="bi bi-box me-1"></i><?= $filteredCount ?><?= $searchTerm ? " dari $totalProduk" : "" ?> Produk</span>
+              <span class="stats-badge"><i class="bi bi-box me-1"></i>
+                <?= $totalData ?><?= $searchTerm ? " dari $totalProduk" : "" ?> Produk
+              </span>
               <?php if ($searchTerm): ?>
                 <span class="badge bg-secondary"><i class="bi bi-search me-1"></i>"<?= htmlspecialchars($searchTerm) ?>"</span>
               <?php endif; ?>
@@ -278,6 +291,18 @@
       </div>
 
       <div class="card-body p-0">
+        <div class="p-3">
+          <form method="GET" action="" id="limit-form" class="d-flex align-items-center">
+            <label for="limit" class="form-label me-2 mb-0">Tampilkan:</label>
+            <select name="limit" id="limit" class="form-select form-select-sm" style="width: auto;" onchange="document.getElementById('limit-form').submit()">
+              <option value="5" <?= ($limit == 5) ? 'selected' : '' ?>>5</option>
+              <option value="10" <?= ($limit == 10) ? 'selected' : '' ?>>10</option>
+              <option value="25" <?= ($limit == 25) ? 'selected' : '' ?>>25</option>
+              <option value="50" <?= ($limit == 50) ? 'selected' : '' ?>>50</option>
+            </select>
+            <input type="hidden" name="cari" value="<?= htmlspecialchars($searchTerm) ?>">
+          </form>
+        </div>
         <div class="table-responsive">
           <table class="table table-clean align-middle">
             <thead>
@@ -291,30 +316,61 @@
               </tr>
             </thead>
             <tbody>
-              <?php
-              if ($result && mysqli_num_rows($result) > 0) {
+            <?php
+            if ($result && mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
-                  echo "<tr>
-                        <td class='text-center'>
-                          <a href='edit.php?id=" . $row['id'] . "' class='btn btn-edit btn-sm'>
-                            Edit
-                          </a>
-                        </td>
-                        <td>
-                          <img src='uploads/" . htmlspecialchars($row['gambar']) . "' class='product-image' alt='Gambar " . htmlspecialchars($row['nama']) . "'>
-                        </td>
-                        <td><span class='product-code'>" . htmlspecialchars($row['kode']) . "</span></td>
-                        <td class='fw-bold'>" . htmlspecialchars($row['nama']) . "</td>
-                        <td><span class='unit-badge'>" . htmlspecialchars($row['satuan']) . "</span></td>
-                        <td><span class='price-badge'>Rp " . number_format($row['harga'], 0, ',', '.') . "</span></td>
-                      </tr>";
+                    echo "<tr>
+                            <td class='text-center'>
+                                <a href='edit.php?id=" . $row['id'] . "' class='btn btn-edit btn-sm'>
+                                    Edit
+                                </a>
+                            </td>
+                            <td>";
+
+                    // Cek apakah ada nama gambar dan file-nya benar-benar ada
+                    if (!empty($row['gambar']) && file_exists("uploads/" . $row['gambar'])) {
+                        // Jika ada, tampilkan gambar
+                        echo "<img src='uploads/" . htmlspecialchars($row['gambar']) . "' class='product-image' alt='Gambar " . htmlspecialchars($row['nama']) . "'>";
+                    } else {
+                        // Jika tidak ada, tampilkan placeholder "No Img"
+                        echo "<div class='product-image d-flex align-items-center justify-content-center bg-light text-muted' style='font-size: 0.8rem; border: 1px solid #dee2e6;'>No Img</div>";
+                    }
+
+                    echo "</td>
+                            <td><span class='product-code'>" . htmlspecialchars($row['kode']) . "</span></td>
+                            <td class='fw-bold'>" . htmlspecialchars($row['nama']) . "</td>
+                            <td><span class='unit-badge'>" . htmlspecialchars($row['satuan']) . "</span></td>
+                            <td><span class='price-badge'>Rp " . number_format($row['harga'], 0, ',', '.') . "</span></td>
+                          </tr>";
                 }
-              } else {
+            } else {
                 echo "<tr><td colspan='6' class='text-center p-5'>Belum ada produk.</td></tr>";
-              }
-              ?>
+            }
+            ?>
             </tbody>
           </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+          <span class="text-muted small">
+            Menampilkan <?= mysqli_num_rows($result) ?> dari <?= $totalData ?> data
+          </span>
+          <nav>
+            <ul class="pagination mb-0">
+              <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                <a class="page-link" href="?page=<?= $page - 1 ?>&limit=<?= $limit ?>&cari=<?= htmlspecialchars($searchTerm) ?>">Previous</a>
+              </li>
+              
+              <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                  <a class="page-link" href="?page=<?= $i ?>&limit=<?= $limit ?>&cari=<?= htmlspecialchars($searchTerm) ?>"><?= $i ?></a>
+                </li>
+              <?php endfor; ?>
+
+              <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+                <a class="page-link" href="?page=<?= $page + 1 ?>&limit=<?= $limit ?>&cari=<?= htmlspecialchars($searchTerm) ?>">Next</a>
+              </li>
+            </ul>
+          </nav>
         </div>
       </div>
     </div>
