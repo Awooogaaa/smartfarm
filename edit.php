@@ -2,23 +2,35 @@
 <?php
 $error = "";
 
+// Ambil ID dari URL
+if (!isset($_GET['id'])) {
+    header("Location: index.php");
+    exit;
+}
+$id = $_GET['id'];
+
 // Hapus produk
 if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    $result = mysqli_query($koneksi, "SELECT gambar FROM produk WHERE id=$id");
+    $delete_id = $_GET['delete'];
+    $result = mysqli_query($koneksi, "SELECT gambar FROM produk WHERE id=$delete_id");
     $row = mysqli_fetch_assoc($result);
     if ($row && !empty($row['gambar']) && file_exists("uploads/" . $row['gambar'])) {
         unlink("uploads/" . $row['gambar']);
     }
-    mysqli_query($koneksi, "DELETE FROM produk WHERE id=$id");
+    mysqli_query($koneksi, "DELETE FROM produk WHERE id=$delete_id");
     header("Location: index.php?msg=deleted");
     exit;
 }
 
-// Ambil data produk
-$id = $_GET['id'];
+// Ambil data produk yang akan diedit
 $result = mysqli_query($koneksi, "SELECT * FROM produk WHERE id=$id");
 $data = mysqli_fetch_assoc($result);
+if (!$data) {
+    // Jika produk tidak ditemukan, kembali ke index
+    header("Location: index.php");
+    exit;
+}
+
 
 // Update produk
 if (isset($_POST['update'])) {
@@ -27,25 +39,36 @@ if (isset($_POST['update'])) {
     $satuan = trim($_POST['satuan']);
     $harga  = trim($_POST['harga']);
 
+    // --- VALIDASI BARU: Cek panjang Kode dan Nama ---
+    if (strlen($kode) > 20) {
+        $error = "Kode produk terlalu panjang! Maksimal 20 karakter.";
+    } elseif (strlen($nama) > 100) {
+        $error = "Nama produk terlalu panjang! Maksimal 100 karakter.";
+    }
+    // --- AKHIR VALIDASI BARU ---
+
     // Validasi harga
-    if ($harga < 1) {
+    if ($error == "" && $harga < 1) {
         $error = "Harga tidak boleh kurang dari 1!";
-    } elseif (strlen($harga) > 10) {
+    } elseif ($error == "" && strlen($harga) > 10) {
         $error = "Harga terlalu besar!";
     }
 
     // Cek kode unik (kecuali kalau kode sama dengan dirinya sendiri)
-    $cekKode = mysqli_query($koneksi, "SELECT id FROM produk WHERE kode='$kode' AND id!=$id");
-    if (mysqli_num_rows($cekKode) > 0) {
-        $error = "Kode produk sudah ada!";
+    if ($error == "") {
+        $cekKode = mysqli_query($koneksi, "SELECT id FROM produk WHERE kode='$kode' AND id!=$id");
+        if (mysqli_num_rows($cekKode) > 0) {
+            $error = "Kode produk sudah digunakan oleh produk lain!";
+        }
     }
 
+
     // Validasi gambar baru
-    if ($_FILES['gambar']['name'] != "") {
-        $gambar = $_FILES['gambar']['name'];
+    if ($error == "" && $_FILES['gambar']['name'] != "") {
+        $gambar_baru = $_FILES['gambar']['name'];
         $tmp    = $_FILES['gambar']['tmp_name'];
         $ukuran = $_FILES['gambar']['size'];
-        $ext    = strtolower(pathinfo($gambar, PATHINFO_EXTENSION));
+        $ext    = strtolower(pathinfo($gambar_baru, PATHINFO_EXTENSION));
         $allowed = ['jpg','jpeg','png','gif'];
 
         if (!in_array($ext, $allowed)) {
@@ -55,20 +78,33 @@ if (isset($_POST['update'])) {
         }
     }
 
+    // Jika validasi lolos, proses update
     if ($error == "") {
-        if ($_FILES['gambar']['name'] != "") {
+        $gambar_query_part = "";
+        // Jika ada gambar baru yang diupload
+        if (!empty($_FILES['gambar']['name'])) {
+            // Hapus gambar lama jika ada
             if (!empty($data['gambar']) && file_exists("uploads/" . $data['gambar'])) {
                 unlink("uploads/" . $data['gambar']);
             }
-            move_uploaded_file($tmp, "uploads/" . $gambar);
-            $query = "UPDATE produk SET kode='$kode', nama='$nama', satuan='$satuan', harga='$harga', gambar='$gambar' WHERE id=$id";
-        } else {
-            $query = "UPDATE produk SET kode='$kode', nama='$nama', satuan='$satuan', harga='$harga' WHERE id=$id";
+            // Buat nama unik dan pindahkan gambar baru
+            $gambar_final = uniqid() . '-' . $_FILES['gambar']['name'];
+            move_uploaded_file($_FILES['gambar']['tmp_name'], "uploads/" . $gambar_final);
+            $gambar_query_part = ", gambar='$gambar_final'";
         }
+        
+        $query = "UPDATE produk SET kode='$kode', nama='$nama', satuan='$satuan', harga='$harga' $gambar_query_part WHERE id=$id";
+        
         mysqli_query($koneksi, $query);
         header("Location: index.php?msg=updated");
         exit;
     }
+    
+    // Jika ada error, data yang diinput tetap ditampilkan di form
+    $data['kode'] = htmlspecialchars($_POST['kode']);
+    $data['nama'] = htmlspecialchars($_POST['nama']);
+    $data['satuan'] = htmlspecialchars($_POST['satuan']);
+    $data['harga'] = htmlspecialchars($_POST['harga']);
 }
 ?>
 <!DOCTYPE html>
@@ -77,6 +113,7 @@ if (isset($_POST['update'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Produk</title>
+    <link href="modul/node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -227,7 +264,7 @@ if (isset($_POST['update'])) {
                 <div class="card main-card">
                     <div class="card-body p-4">
                         <div class="header-section">
-                            <h2 class="page-title">
+                            <h2 class="page-title text-center">
                                 <i class="bi bi-pencil-square icon"></i>Edit Produk
                             </h2>
                             <p class="text-center small mb-0">Perbarui informasi produk dengan mudah</p>
@@ -249,7 +286,7 @@ if (isset($_POST['update'])) {
                                     </label>
                                     <input type="text" name="kode" class="form-control" 
                                            value="<?= htmlspecialchars($data['kode']) ?>" 
-                                           placeholder="Masukkan kode produk" required>
+                                           placeholder="Maksimal 20 karakter" required>
                                 </div>
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">
@@ -257,56 +294,50 @@ if (isset($_POST['update'])) {
                                     </label>
                                     <input type="text" name="nama" class="form-control" 
                                            value="<?= htmlspecialchars($data['nama']) ?>" 
-                                           placeholder="Masukkan nama produk" required>
+                                           placeholder="Maksimal 100 karakter" required>
                                 </div>
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-6 mb-4">
-    <label class="form-label">
-        <i class="bi bi-rulers icon"></i>Satuan
-    </label>
-    <select name="satuan" class="form-control" required>
-        <option value="">-- Pilih Satuan --</option>
-        <option value="pcs"   <?= ($data['satuan']=="pcs") ? "selected" : "" ?>>Pcs</option>
-        <option value="kg"    <?= ($data['satuan']=="kg") ? "selected" : "" ?>>Kilogram (Kg)</option>
-        <option value="liter" <?= ($data['satuan']=="liter") ? "selected" : "" ?>>Liter</option>
-        <option value="box"   <?= ($data['satuan']=="box") ? "selected" : "" ?>>Box</option>
-    </select>
-    <div class="form-text">Pilih satuan produk</div>
-</div>
+                                    <label class="form-label">
+                                        <i class="bi bi-rulers icon"></i>Satuan
+                                    </label>
+                                    <select name="satuan" class="form-control" required>
+                                        <option value="">-- Pilih Satuan --</option>
+                                        <option value="pcs"   <?= ($data['satuan']=="pcs") ? "selected" : "" ?>>Pcs</option>
+                                        <option value="kg"    <?= ($data['satuan']=="kg") ? "selected" : "" ?>>Kilogram (Kg)</option>
+                                        <option value="liter" <?= ($data['satuan']=="liter") ? "selected" : "" ?>>Liter</option>
+                                        <option value="box"   <?= ($data['satuan']=="box") ? "selected" : "" ?>>Box</option>
+                                    </select>
+                                </div>
 
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">
                                         <i class="bi bi-currency-dollar icon"></i>Harga
                                     </label>
                                     <div class="input-group">
-                                        <span class="input-group-text" style="border-radius: 12px 0 0 12px;">Rp</span>
+                                        <span class="input-group-text" style="border-radius: 8px 0 0 8px;">Rp</span>
                                         <input type="number" name="harga" class="form-control" 
                                                value="<?= $data['harga'] ?>" min="1" 
                                                placeholder="0" required 
-                                               style="border-radius: 0 12px 12px 0;">
+                                               style="border-radius: 0 8px 8px 0;">
                                     </div>
                                 </div>
                             </div>
 
                             <div class="mb-4">
                                 <label class="form-label">
-                                    <i class="bi bi-image icon"></i>Foto Saat Ini
+                                    <i class="bi bi-image icon"></i>Gambar Saat Ini
                                 </label>
                                 <div class="text-center">
                                     <?php if (!empty($data['gambar'])): ?>
                                         <img src="uploads/<?= htmlspecialchars($data['gambar']) ?>" 
                                              class="img-preview mb-2" width="200" height="200" 
-                                             style="object-fit: cover;" alt="Foto Produk">
-                                        <p class="text-muted small">
-                                            <i class="bi bi-file-image icon"></i>
-                                            <?= htmlspecialchars($data['gambar']) ?>
-                                        </p>
+                                             style="object-fit: cover;" alt="Gambar Produk">
                                     <?php else: ?>
                                         <div class="p-4" style="background: #f8f9fa; border-radius: 8px;">
-                                            <i class="bi bi-image" style="font-size: 3rem; color: #90a4ae;"></i>
-                                            <p class="text-muted mt-2 mb-0">Belum ada gambar</p>
+                                            <p class="text-muted my-2">Belum ada gambar</p>
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -314,11 +345,11 @@ if (isset($_POST['update'])) {
 
                             <div class="mb-4">
                                 <label class="form-label">
-                                    <i class="bi bi-cloud-upload icon"></i>Ganti Foto Baru (Opsional)
+                                    <i class="bi bi-cloud-upload icon"></i>Ganti Gambar (Opsional)
                                 </label>
-                                                                <div class="upload-area" onclick="document.getElementById('gambar').click()">
+                                <div class="upload-area" onclick="document.getElementById('gambar').click()">
                                     <i class="bi bi-cloud-upload" style="font-size: 2rem; color: #2196f3;"></i>
-                                    <p class="mt-2 mb-1">Klik untuk memilih file</p>
+                                    <p class="mt-2 mb-1">Klik untuk memilih file baru</p>
                                     <small class="text-muted">JPG, JPEG, PNG, GIF • Maksimal 2MB</small>
                                 </div>
                                 <input type="file" name="gambar" id="gambar" class="d-none" 
@@ -333,16 +364,16 @@ if (isset($_POST['update'])) {
                                 </div>
                             </div>
 
-                            <div class="text-center">
+                            <div class="text-center pt-3">
                                 <button type="submit" name="update" class="btn btn-primary me-2">
                                     <i class="bi bi-check-lg icon"></i>Update Produk
                                 </button>
                                 <button type="button" class="btn btn-danger me-2" 
                                         onclick="confirmDelete(<?= $data['id'] ?>)">
-                                    <i class="bi bi-trash3 icon"></i>Hapus Produk
+                                    <i class="bi bi-trash3 icon"></i>Hapus
                                 </button>
                                 <a href="index.php" class="btn btn-secondary">
-                                    <i class="bi bi-arrow-left icon"></i>Kembali
+                                    <i class="bi bi-arrow-left icon"></i>Batal
                                 </a>
                             </div>
                         </form>
@@ -352,26 +383,23 @@ if (isset($_POST['update'])) {
         </div>
     </div>
 
-    <!-- Modal Konfirmasi Hapus -->
     <div class="modal fade" id="deleteModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 12px; border: none;">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title text-danger">
-                        <i class="bi bi-exclamation-triangle icon"></i>Konfirmasi Hapus
-                    </h5>
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-danger">Konfirmasi Hapus</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body text-center">
-                    <i class="bi bi-trash3 text-danger" style="font-size: 3rem;"></i>
-                    <h6 class="mt-3">Yakin ingin menghapus produk ini?</h6>
-                    <p class="text-muted">Tindakan ini tidak dapat dibatalkan!</p>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                    <p class="mt-3">Yakin ingin menghapus produk ini secara permanen?</p>
                 </div>
                 <div class="modal-footer border-0 justify-content-center">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x icon"></i>Batal
+                        Batal
                     </button>
                     <a href="#" id="confirmDeleteBtn" class="btn btn-danger">
-                        <i class="bi bi-trash3 icon"></i>Ya, Hapus!
+                        Ya, Hapus
                     </a>
                 </div>
             </div>
@@ -397,9 +425,11 @@ if (isset($_POST['update'])) {
             new bootstrap.Modal(document.getElementById('deleteModal')).show();
         }
 
-        // Format ribuan untuk harga
         document.querySelector('input[name="harga"]').addEventListener('input', function(e) {
             let value = e.target.value.replace(/[^\d]/g, '');
+            if (value.length > 10) {
+                value = value.substring(0, 10);
+            }
             e.target.value = value;
         });
     </script>
