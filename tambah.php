@@ -7,27 +7,37 @@ if (isset($_POST['simpan'])) {
     $satuan = trim($_POST['satuan']);
     $harga  = trim($_POST['harga']);
 
+    // --- VALIDASI BARU: Cek panjang Kode dan Nama ---
+    if (strlen($kode) > 20) {
+        $error = "Kode produk terlalu panjang! Maksimal 20 karakter.";
+    } elseif (strlen($nama) > 100) {
+        $error = "Nama produk terlalu panjang! Maksimal 100 karakter.";
+    }
+    // --- AKHIR VALIDASI BARU ---
+
     // Validasi harga
-    if ($harga < 1) {
+    if ($error == "" && $harga < 1) {
         $error = "Harga tidak boleh kurang dari 1!";
-    } elseif (strlen($harga) > 10) {
+    } elseif ($error == "" && strlen($harga) > 10) {
         $error = "Harga terlalu besar!";
     }
 
     // Cek kode unik
-    $cekKode = mysqli_query($koneksi, "SELECT id FROM produk WHERE kode='$kode'");
-    if (mysqli_num_rows($cekKode) > 0) {
-        $error = "Kode produk sudah ada, gunakan kode lain!";
+    if ($error == "") {
+        $cekKode = mysqli_query($koneksi, "SELECT id FROM produk WHERE kode='$kode'");
+        if (mysqli_num_rows($cekKode) > 0) {
+            $error = "Kode produk sudah ada, gunakan kode lain!";
+        }
     }
 
     // Validasi gambar
     $gambar = $_FILES['gambar']['name'];
-    $tmp    = $_FILES['gambar']['tmp_name'];
-    $ukuran = $_FILES['gambar']['size'];
-    $ext    = strtolower(pathinfo($gambar, PATHINFO_EXTENSION));
-    $allowed = ['jpg','jpeg','png','gif'];
+    if ($error == "" && $gambar != "") {
+        $tmp    = $_FILES['gambar']['tmp_name'];
+        $ukuran = $_FILES['gambar']['size'];
+        $ext    = strtolower(pathinfo($gambar, PATHINFO_EXTENSION));
+        $allowed = ['jpg','jpeg','png','gif'];
 
-    if ($gambar != "") {
         if (!in_array($ext, $allowed)) {
             $error = "Hanya file gambar (JPG, JPEG, PNG, GIF) yang diperbolehkan!";
         } elseif ($ukuran > 2 * 1024 * 1024) { // 2MB
@@ -38,10 +48,16 @@ if (isset($_POST['simpan'])) {
     // Kalau tidak ada error → simpan
     if ($error == "") {
         if ($gambar != "") {
-            move_uploaded_file($tmp, "uploads/" . $gambar);
+            // Membuat nama file unik untuk menghindari duplikasi
+            $gambar_baru = uniqid() . '-' . $gambar;
+            move_uploaded_file($tmp, "uploads/" . $gambar_baru);
+        } else {
+            $gambar_baru = ""; // Jika tidak ada gambar
         }
+        
         mysqli_query($koneksi, "INSERT INTO produk (kode, nama, satuan, harga, gambar)
-                                VALUES ('$kode', '$nama', '$satuan', '$harga', '$gambar')");
+                                VALUES ('$kode', '$nama', '$satuan', '$harga', '$gambar_baru')");
+        
         header("Location: index.php?msg=success");
         exit;
     }
@@ -53,6 +69,7 @@ if (isset($_POST['simpan'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tambah Produk</title>
+    <link href="modul/node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -218,7 +235,7 @@ if (isset($_POST['simpan'])) {
                                     <input type="text" 
                                            name="kode" 
                                            class="form-control" 
-                                           placeholder="Masukkan kode unik produk"
+                                           placeholder="Maksimal 20 karakter"
                                            value="<?= isset($_POST['kode']) ? htmlspecialchars($_POST['kode']) : '' ?>"
                                            required>
                                     <div class="form-text">Kode harus unik untuk setiap produk</div>
@@ -230,7 +247,7 @@ if (isset($_POST['simpan'])) {
                                     <input type="text" 
                                            name="nama" 
                                            class="form-control" 
-                                           placeholder="Masukkan nama produk"
+                                           placeholder="Maksimal 100 karakter"
                                            value="<?= isset($_POST['nama']) ? htmlspecialchars($_POST['nama']) : '' ?>"
                                            required>
                                 </div>
@@ -238,18 +255,18 @@ if (isset($_POST['simpan'])) {
                             
                             <div class="row">
                                <div class="col-md-6 mb-4">
-    <label class="form-label">
-        <i class="bi bi-rulers icon"></i>Satuan
-    </label>
-    <select name="satuan" class="form-control" required>
-        <option value="">-- Pilih Satuan --</option>
-        <option value="pcs" <?= (isset($_POST['satuan']) && $_POST['satuan']=="pcs") ? "selected" : "" ?>>Pcs</option>
-        <option value="kg" <?= (isset($_POST['satuan']) && $_POST['satuan']=="kg") ? "selected" : "" ?>>Kilogram (Kg)</option>
-        <option value="liter" <?= (isset($_POST['satuan']) && $_POST['satuan']=="liter") ? "selected" : "" ?>>Liter</option>
-        <option value="box" <?= (isset($_POST['satuan']) && $_POST['satuan']=="box") ? "selected" : "" ?>>Box</option>
-    </select>
-    <div class="form-text">Pilih satuan produk</div>
-</div>
+                                    <label class="form-label">
+                                        <i class="bi bi-rulers icon"></i>Satuan
+                                    </label>
+                                    <select name="satuan" class="form-control" required>
+                                        <option value="">-- Pilih Satuan --</option>
+                                        <option value="pcs" <?= (isset($_POST['satuan']) && $_POST['satuan']=="pcs") ? "selected" : "" ?>>Pcs</option>
+                                        <option value="kg" <?= (isset($_POST['satuan']) && $_POST['satuan']=="kg") ? "selected" : "" ?>>Kilogram (Kg)</option>
+                                        <option value="liter" <?= (isset($_POST['satuan']) && $_POST['satuan']=="liter") ? "selected" : "" ?>>Liter</option>
+                                        <option value="box" <?= (isset($_POST['satuan']) && $_POST['satuan']=="box") ? "selected" : "" ?>>Box</option>
+                                    </select>
+                                    <div class="form-text">Pilih satuan produk</div>
+                                </div>
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">
                                         <i class="bi bi-currency-dollar icon"></i>Harga
@@ -323,24 +340,21 @@ if (isset($_POST['simpan'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // SCRIPT BAWAAN ANDA TETAP SAMA
         function previewImage(event) {
             const file = event.target.files[0];
             if (file) {
-                // Validasi ukuran file
                 if (file.size > 2 * 1024 * 1024) {
                     alert('Ukuran file terlalu besar! Maksimal 2MB.');
                     event.target.value = '';
                     return;
                 }
-                
-                // Validasi tipe file
                 const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
                 if (!allowedTypes.includes(file.type)) {
                     alert('Format file tidak didukung! Gunakan JPG, JPEG, PNG, atau GIF.');
                     event.target.value = '';
                     return;
                 }
-                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('preview').src = e.target.result;
@@ -349,13 +363,10 @@ if (isset($_POST['simpan'])) {
                 reader.readAsDataURL(file);
             }
         }
-
         function removePreview() {
             document.getElementById('gambar').value = '';
             document.getElementById('previewContainer').style.display = 'none';
         }
-
-        // Format input harga
         document.querySelector('input[name="harga"]').addEventListener('input', function(e) {
             let value = e.target.value.replace(/[^\d]/g, '');
             if (value.length > 10) {
@@ -363,54 +374,41 @@ if (isset($_POST['simpan'])) {
             }
             e.target.value = value;
         });
-
-        // Validasi form sebelum submit
         document.getElementById('productForm').addEventListener('submit', function(e) {
             const kode = document.querySelector('input[name="kode"]').value.trim();
             const nama = document.querySelector('input[name="nama"]').value.trim();
-            const satuan = document.querySelector('input[name="satuan"]').value.trim();
+            const satuan = document.querySelector('select[name="satuan"]').value.trim();
             const harga = document.querySelector('input[name="harga"]').value;
-
             if (!kode || !nama || !satuan || !harga || harga < 1) {
                 e.preventDefault();
                 alert('Mohon isi semua field dengan benar!');
                 return false;
             }
         });
-
-        // Drag & drop functionality
         const dropArea = document.querySelector('.upload-area');
         const fileInput = document.getElementById('gambar');
-
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, preventDefaults, false);
         });
-
         function preventDefaults(e) {
             e.preventDefault();
             e.stopPropagation();
         }
-
         ['dragenter', 'dragover'].forEach(eventName => {
             dropArea.addEventListener(eventName, highlight, false);
         });
-
         ['dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, unhighlight, false);
         });
-
         function highlight(e) {
             dropArea.style.borderColor = '#1976d2';
             dropArea.style.background = '#e8f4fd';
         }
-
         function unhighlight(e) {
             dropArea.style.borderColor = '#2196f3';
             dropArea.style.background = '#f3f9ff';
         }
-
         dropArea.addEventListener('drop', handleDrop, false);
-
         function handleDrop(e) {
             const dt = e.dataTransfer;
             const files = dt.files;
@@ -420,8 +418,6 @@ if (isset($_POST['simpan'])) {
                 previewImage({target: {files: files}});
             }
         }
-
-        // Auto focus ke field pertama
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelector('input[name="kode"]').focus();
         });
