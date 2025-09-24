@@ -263,13 +263,19 @@ if (isset($_POST['update'])) {
                             
                             <div class="row">
                                 <div class="col-md-6 mb-4">
-                                    <label class="form-label">
-                                        <i class="bi bi-rulers icon"></i>Satuan
-                                    </label>
-                                    <input type="text" name="satuan" class="form-control" 
-                                           value="<?= htmlspecialchars($data['satuan']) ?>" 
-                                           placeholder="Contoh: pcs, kg, liter" required>
-                                </div>
+    <label class="form-label">
+        <i class="bi bi-rulers icon"></i>Satuan
+    </label>
+    <select name="satuan" class="form-control" required>
+        <option value="">-- Pilih Satuan --</option>
+        <option value="pcs"   <?= ($data['satuan']=="pcs") ? "selected" : "" ?>>Pcs</option>
+        <option value="kg"    <?= ($data['satuan']=="kg") ? "selected" : "" ?>>Kilogram (Kg)</option>
+        <option value="liter" <?= ($data['satuan']=="liter") ? "selected" : "" ?>>Liter</option>
+        <option value="box"   <?= ($data['satuan']=="box") ? "selected" : "" ?>>Box</option>
+    </select>
+    <div class="form-text">Pilih satuan produk</div>
+</div>
+
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">
                                         <i class="bi bi-currency-dollar icon"></i>Harga
