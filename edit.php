@@ -466,7 +466,7 @@ if (isset($_POST['update'])) {
         }
 
         function confirmDelete(id) {
-            document.getElementById('confirmDeleteBtn').href = 'edit.php?delete=' + id;
+            document.getElementById('confirmDeleteBtn').href = 'edit.php?id=' + id + '&delete=' + id;
             new bootstrap.Modal(document.getElementById('deleteModal')).show();
         }
 
