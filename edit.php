@@ -69,7 +69,7 @@ if (isset($_POST['update'])) {
         $tmp    = $_FILES['gambar']['tmp_name'];
         $ukuran = $_FILES['gambar']['size'];
         $ext    = strtolower(pathinfo($gambar_baru, PATHINFO_EXTENSION));
-        $allowed = ['jpg','jpeg','png','gif'];
+        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
 
         if (!in_array($ext, $allowed)) {
             $error = "Hanya file gambar (JPG, JPEG, PNG, GIF) yang diperbolehkan!";
@@ -92,14 +92,14 @@ if (isset($_POST['update'])) {
             move_uploaded_file($_FILES['gambar']['tmp_name'], "uploads/" . $gambar_final);
             $gambar_query_part = ", gambar='$gambar_final'";
         }
-        
+
         $query = "UPDATE produk SET kode='$kode', nama='$nama', satuan='$satuan', harga='$harga' $gambar_query_part WHERE id=$id";
-        
+
         mysqli_query($koneksi, $query);
         header("Location: index.php?msg=updated");
         exit;
     }
-    
+
     // Jika ada error, data yang diinput tetap ditampilkan di form
     $data['kode'] = htmlspecialchars($_POST['kode']);
     $data['nama'] = htmlspecialchars($_POST['nama']);
@@ -109,6 +109,7 @@ if (isset($_POST['update'])) {
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -122,75 +123,75 @@ if (isset($_POST['update'])) {
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         .main-card {
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             border: 1px solid #e3f2fd;
             background: #ffffff;
         }
-        
+
         .form-control {
             border-radius: 8px;
             border: 1.5px solid #e3f2fd;
             padding: 10px 15px;
             transition: all 0.3s ease;
         }
-        
+
         .form-control:focus {
             border-color: #2196f3;
             box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.15);
         }
-        
+
         .btn {
             border-radius: 8px;
             padding: 10px 20px;
             font-weight: 500;
             transition: all 0.3s ease;
         }
-        
+
         .btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-        
+
         .btn-primary {
             background-color: #2196f3;
             border-color: #2196f3;
         }
-        
+
         .btn-primary:hover {
             background-color: #1976d2;
             border-color: #1976d2;
         }
-        
+
         .btn-danger {
             background-color: #f44336;
             border-color: #f44336;
         }
-        
+
         .btn-danger:hover {
             background-color: #d32f2f;
             border-color: #d32f2f;
         }
-        
+
         .btn-secondary {
             background-color: #90a4ae;
             border-color: #90a4ae;
         }
-        
+
         .btn-secondary:hover {
             background-color: #78909c;
             border-color: #78909c;
         }
-        
+
         .page-title {
             color: #1565c0;
             font-weight: 600;
             text-align: center;
             margin-bottom: 30px;
         }
-        
+
         .header-section {
             background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
             margin: -2rem -2rem 2rem -2rem;
@@ -198,38 +199,38 @@ if (isset($_POST['update'])) {
             border-radius: 12px 12px 0 0;
             color: white;
         }
-        
+
         .header-section .page-title {
             color: white;
             margin-bottom: 0;
         }
-        
+
         .header-section p {
-            color: rgba(255,255,255,0.9);
+            color: rgba(255, 255, 255, 0.9);
             margin-bottom: 0;
         }
-        
+
         .form-label {
             font-weight: 500;
             color: #1565c0;
             margin-bottom: 6px;
         }
-        
+
         .img-preview {
             border-radius: 8px;
             border: 2px solid #e3f2fd;
             transition: all 0.3s ease;
         }
-        
+
         .img-preview:hover {
             border-color: #2196f3;
         }
-        
+
         .alert {
             border-radius: 8px;
             border: none;
         }
-        
+
         .upload-area {
             border: 2px dashed #2196f3;
             border-radius: 8px;
@@ -239,24 +240,52 @@ if (isset($_POST['update'])) {
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        
+
         .upload-area:hover {
             background: #e8f4fd;
             border-color: #1976d2;
         }
-        
+
         .icon {
             margin-right: 6px;
         }
-        
+
         .input-group-text {
             background-color: #e3f2fd;
             border-color: #e3f2fd;
             color: #1565c0;
             font-weight: 500;
         }
+
+        /* Mobile only */
+        @media (max-width: 768px) {
+            .action-buttons .btn-row {
+                display: flex;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .btn-delete {
+                border-radius: 20%;
+                width: 45px;
+                height: 45px;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+
+
+            .btn-cancel {
+                display: block;
+                width: 100%;
+                margin-top: 8px;
+            }
+        }
     </style>
 </head>
+
 <body>
     <div class="container mt-5">
         <div class="row justify-content-center">
@@ -284,20 +313,20 @@ if (isset($_POST['update'])) {
                                     <label class="form-label">
                                         <i class="bi bi-upc-scan icon"></i>Kode Produk
                                     </label>
-                                    <input type="text" name="kode" class="form-control" 
-                                           value="<?= htmlspecialchars($data['kode']) ?>" 
-                                           placeholder="Maksimal 20 karakter" required>
+                                    <input type="text" name="kode" class="form-control"
+                                        value="<?= htmlspecialchars($data['kode']) ?>"
+                                        placeholder="Maksimal 20 karakter" required>
                                 </div>
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">
                                         <i class="bi bi-tag icon"></i>Nama Produk
                                     </label>
-                                    <input type="text" name="nama" class="form-control" 
-                                           value="<?= htmlspecialchars($data['nama']) ?>" 
-                                           placeholder="Maksimal 100 karakter" required>
+                                    <input type="text" name="nama" class="form-control"
+                                        value="<?= htmlspecialchars($data['nama']) ?>"
+                                        placeholder="Maksimal 100 karakter" required>
                                 </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">
@@ -305,10 +334,10 @@ if (isset($_POST['update'])) {
                                     </label>
                                     <select name="satuan" class="form-control" required>
                                         <option value="">-- Pilih Satuan --</option>
-                                        <option value="pcs"   <?= ($data['satuan']=="pcs") ? "selected" : "" ?>>Pcs</option>
-                                        <option value="kg"    <?= ($data['satuan']=="kg") ? "selected" : "" ?>>Kilogram (Kg)</option>
-                                        <option value="liter" <?= ($data['satuan']=="liter") ? "selected" : "" ?>>Liter</option>
-                                        <option value="box"   <?= ($data['satuan']=="box") ? "selected" : "" ?>>Box</option>
+                                        <option value="pcs" <?= ($data['satuan'] == "pcs") ? "selected" : "" ?>>Pcs</option>
+                                        <option value="kg" <?= ($data['satuan'] == "kg") ? "selected" : "" ?>>Kilogram (Kg)</option>
+                                        <option value="liter" <?= ($data['satuan'] == "liter") ? "selected" : "" ?>>Liter</option>
+                                        <option value="box" <?= ($data['satuan'] == "box") ? "selected" : "" ?>>Box</option>
                                     </select>
                                 </div>
 
@@ -318,10 +347,10 @@ if (isset($_POST['update'])) {
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text" style="border-radius: 8px 0 0 8px;">Rp</span>
-                                        <input type="number" name="harga" class="form-control" 
-                                               value="<?= $data['harga'] ?>" min="1" 
-                                               placeholder="0" required 
-                                               style="border-radius: 0 8px 8px 0;">
+                                        <input type="number" name="harga" class="form-control"
+                                            value="<?= $data['harga'] ?>" min="1"
+                                            placeholder="0" required
+                                            style="border-radius: 0 8px 8px 0;">
                                     </div>
                                 </div>
                             </div>
@@ -332,9 +361,9 @@ if (isset($_POST['update'])) {
                                 </label>
                                 <div class="text-center">
                                     <?php if (!empty($data['gambar'])): ?>
-                                        <img src="uploads/<?= htmlspecialchars($data['gambar']) ?>" 
-                                             class="img-preview mb-2" width="200" height="200" 
-                                             style="object-fit: cover;" alt="Gambar Produk">
+                                        <img src="uploads/<?= htmlspecialchars($data['gambar']) ?>"
+                                            class="img-preview mb-2" width="200" height="200"
+                                            style="object-fit: cover;" alt="Gambar Produk">
                                     <?php else: ?>
                                         <div class="p-4" style="background: #f8f9fa; border-radius: 8px;">
                                             <p class="text-muted my-2">Belum ada gambar</p>
@@ -352,30 +381,46 @@ if (isset($_POST['update'])) {
                                     <p class="mt-2 mb-1">Klik untuk memilih file baru</p>
                                     <small class="text-muted">JPG, JPEG, PNG, GIF • Maksimal 2MB</small>
                                 </div>
-                                <input type="file" name="gambar" id="gambar" class="d-none" 
-                                       accept="image/*" onchange="previewImage(event)">
-                                
+                                <input type="file" name="gambar" id="gambar" class="d-none"
+                                    accept="image/*" onchange="previewImage(event)">
+
                                 <div id="previewContainer" class="mt-3 text-center" style="display:none;">
                                     <p class="text-success small mb-2">
                                         <i class="bi bi-check-circle icon"></i>Preview gambar baru:
                                     </p>
-                                    <img id="preview" class="img-preview" width="200" height="200" 
-                                         style="object-fit: cover;">
+                                    <img id="preview" class="img-preview" width="200" height="200"
+                                        style="object-fit: cover;">
                                 </div>
                             </div>
 
-                            <div class="text-center pt-3">
-                                <button type="submit" name="update" class="btn btn-primary me-2">
-                                    <i class="bi bi-check-lg icon"></i>Update Produk
+                            <div class="text-center pt-3 action-buttons">
+                                <!-- Tombol Update -->
+                                <button type="submit" name="update" class="btn btn-primary me-2 d-none d-md-inline">
+                                    <i class="bi bi-check-lg icon"></i> Update Produk
                                 </button>
-                                <button type="button" class="btn btn-danger me-2" 
-                                        onclick="confirmDelete(<?= $data['id'] ?>)">
-                                    <i class="bi bi-trash3 icon"></i>Hapus
+
+                                 <button type="submit" name="update" class="btn btn-primary me-2 d-inline d-md-none">
+                                    <i class="bi bi-check-lg icon"></i> Update
                                 </button>
-                                <a href="index.php" class="btn btn-secondary">
-                                    <i class="bi bi-arrow-left icon"></i>Batal
+
+                                <!-- Tombol Batal -->
+                                <a href="index.php" class="btn btn-secondary me-2">
+                                    <i class="bi bi-arrow-left icon"></i> Batal
                                 </a>
+
+                                <!-- Tombol hapus versi desktop -->
+                                <button type="button" class="btn btn-danger d-none d-md-inline"
+                                    onclick="confirmDelete(<?= $data['id'] ?>)">
+                                    <i class="bi bi-trash3 icon"></i> Hapus
+                                </button>
+
+                                <!-- Tombol hapus versi mobile (ikon bulat) -->
+                                <button type="button" class="btn btn-danger d-inline d-md-none btn-delete"
+                                    onclick="confirmDelete(<?= $data['id'] ?>)">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
                             </div>
+
                         </form>
                     </div>
                 </div>
@@ -434,4 +479,5 @@ if (isset($_POST['update'])) {
         });
     </script>
 </body>
+
 </html>

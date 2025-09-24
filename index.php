@@ -1,6 +1,7 @@
 <?php include "koneksi.php"; ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
 
   <style>
     body {
-      background-color: #f8f9fa;
+      background-color: #ecececff;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
@@ -24,10 +25,12 @@
       font-size: 15px;
       height: 46px;
     }
+
     .search-input:focus {
       outline: none;
       border-color: #2AF598;
     }
+
     .btn-search {
       position: absolute;
       top: 50%;
@@ -43,16 +46,30 @@
       justify-content: center;
       transition: all 0.3s ease;
     }
+
     .btn-search:hover {
-        transform: translateY(-50%) scale(1.05);
+      transform: translateY(-50%) scale(1.05);
     }
+
     .btn-reset {
       background: #dc3545;
       color: #fff;
       border-radius: 25px;
       font-size: 15px;
       height: 40px;
+      padding: 0 20px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
     }
+
+    .btn-reset:hover {
+      background: #ff0019;
+      color: #fff;
+      transform: scale(1.08);
+      box-shadow: 0 2px 8px rgba(255, 0, 25, 0.4);
+    }
+
 
     /* Card & Table */
     .main-card {
@@ -61,11 +78,13 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
       overflow: hidden;
     }
+
     .card-header {
       background: #ffffff !important;
       border-bottom: 1px solid #e9ecef !important;
       padding: 1.5rem;
     }
+
     .stats-badge {
       background: #e7f3ff;
       color: #0066cc;
@@ -81,63 +100,116 @@
       transform: translateY(100%);
       transition: transform 0.3s ease;
     }
+
     .btn-custom .default-state {
       transition: transform 0.3s ease;
     }
+
     .btn-custom:hover .default-state {
       transform: translateY(-100%);
     }
+
     .btn-custom:hover .hover-state {
       transform: translateY(0%);
     }
-    
+
+    .btn-edit {
+      background: #0dcaf0;
+      color: #fff;
+      border-radius: 5px;
+      font-size: 15px;
+      padding: 6px 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .btn-edit:hover {
+      background: #0aa2c0;
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(13, 202, 240, 0.4);
+    }
+
+
     /* Table Styling */
     .table-clean {
-        word-wrap: break-word;
+      word-wrap: break-word;
     }
+
     .table-clean thead th {
       white-space: nowrap;
     }
+
     .product-image {
-      width: 60px;
-      height: 60px;
+      width: 80px;
+      height: 80px;
       border-radius: 8px;
       object-fit: cover;
     }
-    .product-code { background: #fff3cd; color: #856404; padding: 6px 10px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 0.8rem;}
-    .unit-badge { background: #d1ecf1; color: #0c5460; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem;}
-    .price-badge { background: #d4edda; color: #155724; padding: 8px 12px; border-radius: 6px; font-weight: 600;}
+
+    .product-code {
+      background: #fff3cd;
+      color: #856404;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+    }
+
+    .unit-badge {
+      background: #d1ecf1;
+      color: #0c5460;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+    }
+
+    .price-badge {
+      background: #d4edda;
+      color: #155724;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
 
     /* --- PENYESUAIAN UNTUK MOBILE --- */
     @media (max-width: 768px) {
-        .navbar {
-            flex-direction: column;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-        }
-        .search-form {
-            width: 100%;
-            margin-top: 1rem;
-        }
-        /* Ukuran font di tabel diperbesar agar lebih jelas */
-        .table-clean th, .table-clean td {
-            font-size: 0.9rem; 
-            padding: 0.85rem 0.6rem; /* Sedikit padding tambahan */
-        }
-        /* Ukuran font badge juga disesuaikan */
-        .product-code, .unit-badge, .price-badge {
-            font-size: 0.85rem;
-        }
-        .product-image {
-            width: 50px;
-            height: 50px;
-        }
+      .navbar {
+        flex-direction: column;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+      }
+
+      .search-form {
+        width: 100%;
+        margin-top: 1rem;
+      }
+
+      /* Ukuran font di tabel diperbesar agar lebih jelas */
+      .table-clean th,
+      .table-clean td {
+        font-size: 0.9rem;
+        padding: 0.85rem 0.6rem;
+        /* Sedikit padding tambahan */
+      }
+
+      /* Ukuran font badge juga disesuaikan */
+      .product-code,
+      .unit-badge,
+      .price-badge {
+        font-size: 0.85rem;
+      }
+
+      .product-image {
+        width: 50px;
+        height: 50px;
+      }
     }
   </style>
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg py-2 px-3 shadow-sm my-3 mx-md-5 mx-3 rounded-pill bg-white">
+  <nav class="navbar navbar-expand-lg px-4 mb-5 py-2 px-3 shadow-sm my-3 rounded-pill bg-white mx-auto" style="max-width: 1250px;">
     <div class="container-fluid">
       <a class="navbar-brand fw-bold fs-4 text-black" href="index.php">Manajemen Produk</a>
       <form method="GET" action="" class="d-flex align-items-center gap-2 search-form" role="search">
@@ -159,7 +231,7 @@
     </div>
   </nav>
 
-  <div class="container-fluid px-4">
+  <div class="container px-4" style="max-width: 1300px;">
     <?php
     // Query produk
     $where = "";
@@ -189,7 +261,7 @@
             </div>
           </div>
           <div class="col-md-4 text-md-end">
-             <a href="tambah.php" class="btn btn-custom text-black position-relative overflow-hidden px-3 d-inline-flex align-items-center gap-2" style="background-color:#FFFFFF; text-decoration:none;">
+            <a href="tambah.php" class="btn btn-custom text-white position-relative overflow-hidden px-3 d-inline-flex align-items-center gap-2" style="background-color:#009BEB; text-decoration:none;">
               <span class="default-state d-flex align-items-center gap-2">
                 <span>Tambah Produk</span>
               </span>
@@ -224,7 +296,7 @@
                 while ($row = mysqli_fetch_assoc($result)) {
                   echo "<tr>
                         <td class='text-center'>
-                          <a href='edit.php?id=" . $row['id'] . "' class='btn btn-warning btn-sm'>
+                          <a href='edit.php?id=" . $row['id'] . "' class='btn btn-edit btn-sm'>
                             Edit
                           </a>
                         </td>
@@ -250,4 +322,5 @@
 
   <script src="modul/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
