@@ -57,11 +57,13 @@
       border-radius: 25px;
       font-size: 15px;
       height: 40px;
+      line-height: 40px;
       padding: 0 20px;
       border: none;
       cursor: pointer;
       transition: all 0.3s ease-in-out;
     }
+
 
     .btn-reset:hover {
       background: #ff0019;
@@ -178,6 +180,7 @@
         flex-direction: column;
         padding-left: 1rem !important;
         padding-right: 1rem !important;
+        max-width: 88% !important;
       }
 
       .search-form {
@@ -209,16 +212,16 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg px-4 mb-5 py-2 px-3 shadow-sm my-3 rounded-pill bg-white mx-auto" style="max-width: 1250px;">
+  <div class="container text-center my-4">
+    <h1 class="display-5 fw-bold text-primary">SmartFarm</h1>
+    <p class="text-muted">Sistem Manajemen Produk Pertanian</p>
+  </div>
+  <nav class="navbar navbar-expand-lg px-4 mb-5 py-2 px-3 shadow-sm my-3 rounded-4 bg-white mx-auto" style="max-width: 1250px;">
     <div class="container-fluid">
       <a class="navbar-brand fw-bold fs-4 text-black" href="index.php">Manajemen Produk</a>
       <form method="GET" action="" class="d-flex align-items-center gap-2 search-form" role="search">
         <div class="position-relative flex-grow-1">
-          <input type="text"
-            class="form-control search-input"
-            name="cari"
-            placeholder="Cari produk..."
-            value="<?= isset($_GET['cari']) ? htmlspecialchars($_GET['cari']) : '' ?>">
+          <input type="text" class="form-control search-input" name="cari" placeholder="Cari produk..." value="<?= isset($_GET['cari']) ? htmlspecialchars($_GET['cari']) : '' ?>">
           <button type="submit" class="btn-search">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8"></circle>
@@ -226,7 +229,8 @@
             </svg>
           </button>
         </div>
-        <a href="index.php" class="btn btn-reset d-flex align-items-center">Reset</a>
+        <a href="index.php" class="btn btn-reset d-flex align-items-center d-none d-md-inline">Reset</a>
+        <a class="d-inline d-md-none"></a>
       </form>
     </div>
   </nav>
@@ -254,7 +258,7 @@
 
     // --- QUERY UTAMA UNTUK MENAMPILKAN DATA DENGAN LIMIT DAN OFFSET ---
     $result = mysqli_query($koneksi, "SELECT * FROM produk $where ORDER BY id DESC LIMIT $limit OFFSET $offset");
-    
+
     $countAll = mysqli_query($koneksi, "SELECT COUNT(*) as total FROM produk");
     $totalProduk = mysqli_fetch_assoc($countAll)['total'];
     ?>
@@ -268,7 +272,7 @@
               <span class="stats-badge"><i class="bi bi-box me-1"></i>
                 <?= $totalData ?><?= $searchTerm ? " dari $totalProduk" : "" ?> Produk
               </span>
-              <?php if ($searchTerm): ?>
+              <?php if ($searchTerm) : ?>
                 <span class="badge bg-secondary"><i class="bi bi-search me-1"></i>"<?= htmlspecialchars($searchTerm) ?>"</span>
               <?php endif; ?>
             </div>
@@ -316,37 +320,37 @@
               </tr>
             </thead>
             <tbody>
-            <?php
-            if ($result && mysqli_num_rows($result) > 0) {
+              <?php
+              if ($result && mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
-                    echo "<tr>
-                            <td class='text-center'>
-                                <a href='edit.php?id=" . $row['id'] . "' class='btn btn-edit btn-sm'>
-                                    Edit
-                                </a>
-                            </td>
-                            <td>";
+                  echo "<tr>
+                                            <td class='text-center'>
+                                                <a href='edit.php?id=" . $row['id'] . "' class='btn btn-edit btn-sm'>
+                                                    Edit
+                                                </a>
+                                            </td>
+                                            <td>";
 
-                    // Cek apakah ada nama gambar dan file-nya benar-benar ada
-                    if (!empty($row['gambar']) && file_exists("uploads/" . $row['gambar'])) {
-                        // Jika ada, tampilkan gambar
-                        echo "<img src='uploads/" . htmlspecialchars($row['gambar']) . "' class='product-image' alt='Gambar " . htmlspecialchars($row['nama']) . "'>";
-                    } else {
-                        // Jika tidak ada, tampilkan placeholder "No Img"
-                        echo "<div class='product-image d-flex align-items-center justify-content-center bg-light text-muted' style='font-size: 0.8rem; border: 1px solid #dee2e6;'>No Img</div>";
-                    }
+                  // Cek apakah ada nama gambar dan file-nya benar-benar ada
+                  if (!empty($row['gambar']) && file_exists("uploads/" . $row['gambar'])) {
+                    // Jika ada, tampilkan gambar
+                    echo "<img src='uploads/" . htmlspecialchars($row['gambar']) . "' class='product-image' alt='Gambar " . htmlspecialchars($row['nama']) . "'>";
+                  } else {
+                    // Jika tidak ada, tampilkan placeholder "No Img"
+                    echo "<div class='product-image d-flex align-items-center justify-content-center bg-light text-muted' style='font-size: 0.8rem; border: 1px solid #dee2e6;'>No Img</div>";
+                  }
 
-                    echo "</td>
-                            <td><span class='product-code'>" . htmlspecialchars($row['kode']) . "</span></td>
-                            <td class='fw-bold'>" . htmlspecialchars($row['nama']) . "</td>
-                            <td><span class='unit-badge'>" . htmlspecialchars($row['satuan']) . "</span></td>
-                            <td><span class='price-badge'>Rp " . number_format($row['harga'], 0, ',', '.') . "</span></td>
-                          </tr>";
+                  echo "</td>
+                                            <td><span class='product-code'>" . htmlspecialchars($row['kode']) . "</span></td>
+                                            <td class='fw-bold'>" . htmlspecialchars($row['nama']) . "</td>
+                                            <td><span class='unit-badge'>" . htmlspecialchars($row['satuan']) . "</span></td>
+                                            <td><span class='price-badge'>Rp " . number_format($row['harga'], 0, ',', '.') . "</span></td>
+                                          </tr>";
                 }
-            } else {
+              } else {
                 echo "<tr><td colspan='6' class='text-center p-5'>Belum ada produk.</td></tr>";
-            }
-            ?>
+              }
+              ?>
             </tbody>
           </table>
         </div>
@@ -359,8 +363,8 @@
               <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
                 <a class="page-link" href="?page=<?= $page - 1 ?>&limit=<?= $limit ?>&cari=<?= htmlspecialchars($searchTerm) ?>">Previous</a>
               </li>
-              
-              <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+
+              <?php for ($i = 1; $i <= $totalPages; $i++) : ?>
                 <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
                   <a class="page-link" href="?page=<?= $i ?>&limit=<?= $limit ?>&cari=<?= htmlspecialchars($searchTerm) ?>"><?= $i ?></a>
                 </li>

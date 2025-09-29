@@ -290,7 +290,7 @@ if (isset($_POST['simpan'])) {
                                 <label class="form-label">
                                     <i class="bi bi-cloud-upload icon"></i>Gambar Produk (Opsional)
                                 </label>
-                                <div class="upload-area" onclick="document.getElementById('gambar').click()">
+                                <div class="upload-area" onclick="$('#gambar').click()">
                                     <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #2196f3;"></i>
                                     <p class="mt-2 mb-1">Klik untuk memilih gambar produk</p>
                                     <small class="text-muted">JPG, JPEG, PNG, GIF • Maksimal 2MB</small>
@@ -299,8 +299,7 @@ if (isset($_POST['simpan'])) {
                                        name="gambar" 
                                        id="gambar"
                                        class="d-none" 
-                                       accept="image/*"
-                                       onchange="previewImage(event)">
+                                       accept="image/*">
                                 
                                 <div id="previewContainer" class="preview-container mt-3" style="display:none;">
                                     <div class="text-center">
@@ -314,8 +313,8 @@ if (isset($_POST['simpan'])) {
                                              style="object-fit: cover;">
                                         <div class="mt-2">
                                             <button type="button" 
-                                                    class="btn btn-sm btn-outline-danger" 
-                                                    onclick="removePreview()">
+                                                    id="removePreviewBtn"
+                                                    class="btn btn-sm btn-outline-danger">
                                                 <i class="bi bi-x-circle"></i> Hapus
                                             </button>
                                         </div>
@@ -338,88 +337,106 @@ if (isset($_POST['simpan'])) {
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="modul/js/jquery.min.js"></script>
+    <script src="modul/node_modules/bootstrap.bundle.min.js"></script>
+
     <script>
-        // SCRIPT BAWAAN ANDA TETAP SAMA
-        function previewImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                if (file.size > 2 * 1024 * 1024) {
-                    alert('Ukuran file terlalu besar! Maksimal 2MB.');
-                    event.target.value = '';
-                    return;
-                }
-                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-                if (!allowedTypes.includes(file.type)) {
-                    alert('Format file tidak didukung! Gunakan JPG, JPEG, PNG, atau GIF.');
-                    event.target.value = '';
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('preview').src = e.target.result;
-                    document.getElementById('previewContainer').style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-        function removePreview() {
-            document.getElementById('gambar').value = '';
-            document.getElementById('previewContainer').style.display = 'none';
-        }
-        document.querySelector('input[name="harga"]').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/[^\d]/g, '');
-            if (value.length > 10) {
-                value = value.substring(0, 10);
-            }
-            e.target.value = value;
-        });
-        document.getElementById('productForm').addEventListener('submit', function(e) {
-            const kode = document.querySelector('input[name="kode"]').value.trim();
-            const nama = document.querySelector('input[name="nama"]').value.trim();
-            const satuan = document.querySelector('select[name="satuan"]').value.trim();
-            const harga = document.querySelector('input[name="harga"]').value;
-            if (!kode || !nama || !satuan || !harga || harga < 1) {
-                e.preventDefault();
-                alert('Mohon isi semua field dengan benar!');
-                return false;
-            }
-        });
-        const dropArea = document.querySelector('.upload-area');
-        const fileInput = document.getElementById('gambar');
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
-        });
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
-        });
-        function highlight(e) {
-            dropArea.style.borderColor = '#1976d2';
-            dropArea.style.background = '#e8f4fd';
-        }
-        function unhighlight(e) {
-            dropArea.style.borderColor = '#2196f3';
-            dropArea.style.background = '#f3f9ff';
-        }
-        dropArea.addEventListener('drop', handleDrop, false);
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
+        // Jalankan script setelah dokumen HTML siap
+        $(document).ready(function() {
             
-            if (files.length > 0) {
-                fileInput.files = files;
-                previewImage({target: {files: files}});
+            // Fokus ke input kode saat halaman dimuat
+            $('input[name="kode"]').focus();
+
+            // Fungsi untuk preview gambar
+            function previewImage(file) {
+                if (file) {
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('Ukuran file terlalu besar! Maksimal 2MB.');
+                        $('#gambar').val(''); // Reset input file
+                        return;
+                    }
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                    if (!allowedTypes.includes(file.type)) {
+                        alert('Format file tidak didukung! Gunakan JPG, JPEG, PNG, atau GIF.');
+                        $('#gambar').val('');
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#preview').attr('src', e.target.result);
+                        $('#previewContainer').fadeIn(); // Tampilkan preview dengan efek
+                    };
+                    reader.readAsDataURL(file);
+                }
             }
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelector('input[name="kode"]').focus();
+
+            // Event handler saat memilih file gambar
+            $('#gambar').on('change', function(event) {
+                previewImage(event.target.files[0]);
+            });
+
+            // Fungsi untuk hapus preview
+            $('#removePreviewBtn').on('click', function() {
+                $('#gambar').val(''); // Kosongkan input file
+                $('#previewContainer').fadeOut(); // Sembunyikan dengan efek
+            });
+
+            // Batasi input harga hanya angka dan maksimal 10 digit
+            $('input[name="harga"]').on('input', function(e) {
+                let value = $(this).val().replace(/[^\d]/g, '');
+                if (value.length > 10) {
+                    value = value.substring(0, 10);
+                }
+                $(this).val(value);
+            });
+
+            // Validasi form sebelum submit
+            $('#productForm').on('submit', function(e) {
+                const kode = $('input[name="kode"]').val().trim();
+                const nama = $('input[name="nama"]').val().trim();
+                const satuan = $('select[name="satuan"]').val().trim();
+                const harga = $('input[name="harga"]').val();
+                if (!kode || !nama || !satuan || !harga || harga < 1) {
+                    e.preventDefault(); // Batalkan submit
+                    alert('Mohon isi semua field yang wajib diisi dengan benar!');
+                    return false;
+                }
+            });
+
+            // --- Drag and Drop Area ---
+            const dropArea = $('.upload-area');
+            
+            // Mencegah default browser behavior
+            dropArea.on('dragenter dragover dragleave drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            // Menambahkan highlight saat file di atas area
+            dropArea.on('dragenter dragover', function() {
+                $(this).css({
+                    'border-color': '#1976d2',
+                    'background': '#e8f4fd'
+                });
+            });
+            
+            // Menghilangkan highlight
+            dropArea.on('dragleave drop', function() {
+                 $(this).css({
+                    'border-color': '#2196f3',
+                    'background': '#f3f9ff'
+                });
+            });
+
+            // Menangani file yang di-drop
+            dropArea.on('drop', function(e) {
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    $('#gambar').prop('files', files);
+                    previewImage(files[0]);
+                }
+            });
+
         });
     </script>
 </body>
