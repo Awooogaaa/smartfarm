@@ -96,6 +96,34 @@
       font-size: 0.9rem;
     }
 
+    /* Mobile stats badge - untuk tampilan di samping judul */
+    .mobile-stats-badge {
+      background: #e7f3ff;
+      color: #0066cc;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+    }
+
+    /* Mobile button styling - tanpa animasi hover */
+    .btn-custom-mobile {
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background-color: #009BEB !important;
+      transition: none;
+    }
+
+    .btn-custom-mobile:hover {
+      background-color: #009BEB !important;
+      transform: none;
+    }
+
+    .btn-custom-mobile .hover-state {
+      display: none !important;
+    }
+
     /* Tombol Tambah Produk (Gaya Asli) */
     .btn-custom .hover-state {
       background: #009EFD;
@@ -188,6 +216,43 @@
         margin-top: 1rem;
       }
 
+      /* Menyembunyikan stats-badge desktop pada mobile */
+      .stats-badge {
+        display: none !important;
+      }
+
+      /* Menampilkan mobile stats badge */
+      .mobile-stats-badge {
+        display: inline-block !important;
+      }
+
+      /* Mobile layout untuk header */
+      .mobile-product-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 1rem;
+      }
+
+      .mobile-title-section {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .mobile-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .mobile-button-section {
+        display: flex;
+        justify-content: flex-end;
+      }
+
       /* Ukuran font di tabel diperbesar agar lebih jelas */
       .table-clean th,
       .table-clean td {
@@ -208,6 +273,13 @@
         height: 50px;
       }
     }
+
+    /* Untuk desktop, sembunyikan mobile stats badge */
+    @media (min-width: 769px) {
+      .mobile-stats-badge {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 
@@ -216,24 +288,6 @@
     <h1 class="display-5 fw-bold text-primary">SmartFarm</h1>
     <p class="text-muted">Sistem Manajemen Produk Pertanian</p>
   </div>
-  <nav class="navbar navbar-expand-lg px-4 mb-5 py-2 px-3 shadow-sm my-3 rounded-4 bg-white mx-auto" style="max-width: 1250px;">
-    <div class="container-fluid">
-      <a class="navbar-brand fw-bold fs-4 text-black" href="index.php">Manajemen Produk</a>
-      <form method="GET" action="" class="d-flex align-items-center gap-2 search-form" role="search">
-        <div class="position-relative flex-grow-1">
-          <input type="text" class="form-control search-input" name="cari" placeholder="Cari produk..." value="<?= isset($_GET['cari']) ? htmlspecialchars($_GET['cari']) : '' ?>">
-          <button type="submit" class="btn-search">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </button>
-        </div>
-        <a href="index.php" class="btn btn-reset d-flex align-items-center d-none d-md-inline">Reset</a>
-        <a class="d-inline d-md-none"></a>
-      </form>
-    </div>
-  </nav>
 
   <div class="container px-4" style="max-width: 1300px;">
     <?php
@@ -265,20 +319,62 @@
 
     <div class="main-card">
       <div class="card-header">
+        <div class="row align-items-center gy-3 mb-4">
+          <div class="col-lg-7 col-md-12">
+            <a class="navbar-brand fw-bold fs-4 text-black" href="index.php">Manajemen Produk</a>
+          </div>
+          <div class="col-lg-5 col-md-12">
+            <form method="GET" action="" class="d-flex align-items-center gap-2 search-form" role="search">
+              <div class="position-relative flex-grow-1">
+                <input type="text" class="form-control search-input" name="cari" placeholder="Cari produk..." value="<?= isset($_GET['cari']) ? htmlspecialchars($_GET['cari']) : '' ?>">
+                <button type="submit" class="btn-search">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </button>
+              </div>
+              <a href="index.php" class="btn btn-reset d-flex align-items-center d-none d-md-inline">Reset</a>
+              <a class="d-inline d-md-none"></a>
+            </form>
+          </div>
+        </div>
         <div class="row align-items-center gy-3">
           <div class="col-md-8">
             <div class="d-flex align-items-center flex-wrap gap-3">
-              <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Daftar Produk</h4>
-              <span class="stats-badge"><i class="bi bi-box me-1"></i>
+              <!-- Mobile Layout -->
+              <div class="mobile-product-header d-md-none w-100">
+                <div class="mobile-title-section">
+                  <div class="mobile-title-row">
+                    <div>
+                      <h4 class="mb-0 fw-bold text-dark">
+                        <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Daftar Produk
+                      </h4>
+                      <?php if ($searchTerm) : ?>
+                        <span class="badge bg-secondary mt-1"><i class="bi bi-search me-1"></i>"<?= htmlspecialchars($searchTerm) ?>"</span>
+                      <?php endif; ?>
+                    </div>
+                    <span class="mobile-stats-badge">
+                      <i class="bi bi-box me-1"></i><?= $totalData ?><?= $searchTerm ? " dari $totalProduk" : "" ?> Produk
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Desktop: Layout asli -->
+              <h4 class="mb-0 fw-bold text-dark d-none d-md-block"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Daftar Produk</h4>
+              <span class="stats-badge d-none d-md-inline"><i class="bi bi-box me-1"></i>
                 <?= $totalData ?><?= $searchTerm ? " dari $totalProduk" : "" ?> Produk
               </span>
+              
               <?php if ($searchTerm) : ?>
-                <span class="badge bg-secondary"><i class="bi bi-search me-1"></i>"<?= htmlspecialchars($searchTerm) ?>"</span>
+                <span class="badge bg-secondary d-none d-md-inline"><i class="bi bi-search me-1"></i>"<?= htmlspecialchars($searchTerm) ?>"</span>
               <?php endif; ?>
             </div>
           </div>
           <div class="col-md-4 text-md-end">
-            <a href="tambah.php" class="btn btn-custom text-white position-relative overflow-hidden px-3 d-inline-flex align-items-center gap-2" style="background-color:#009BEB; text-decoration:none;">
+            <!-- Desktop Button -->
+            <a href="tambah.php" class="btn btn-custom text-white position-relative overflow-hidden px-3 d-none d-md-inline-flex align-items-center gap-2" style="background-color:#009BEB; text-decoration:none;">
               <span class="default-state d-flex align-items-center gap-2">
                 <span>Tambah Produk</span>
               </span>
@@ -290,6 +386,16 @@
                 </span>
               </span>
             </a>
+            
+            <!-- Mobile Button -->
+            <div class="d-md-none d-flex justify-content-end w-100">
+              <a href="tambah.php" class="btn btn-custom-mobile text-white d-inline-flex align-items-center gap-1" style="text-decoration:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
+                  <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                </svg>
+                <span>Tambah</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
