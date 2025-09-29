@@ -26,11 +26,9 @@ if (isset($_GET['delete'])) {
 $result = mysqli_query($koneksi, "SELECT * FROM produk WHERE id=$id");
 $data = mysqli_fetch_assoc($result);
 if (!$data) {
-    // Jika produk tidak ditemukan, kembali ke index
     header("Location: index.php");
     exit;
 }
-
 
 // Update produk
 if (isset($_POST['update'])) {
@@ -39,13 +37,12 @@ if (isset($_POST['update'])) {
     $satuan = trim($_POST['satuan']);
     $harga  = trim($_POST['harga']);
 
-    // --- VALIDASI BARU: Cek panjang Kode dan Nama ---
+    // Validasi panjang Kode dan Nama
     if (strlen($kode) > 20) {
         $error = "Kode produk terlalu panjang! Maksimal 20 karakter.";
     } elseif (strlen($nama) > 100) {
         $error = "Nama produk terlalu panjang! Maksimal 100 karakter.";
     }
-    // --- AKHIR VALIDASI BARU ---
 
     // Validasi harga
     if ($error == "" && $harga < 1) {
@@ -54,14 +51,13 @@ if (isset($_POST['update'])) {
         $error = "Harga terlalu besar!";
     }
 
-    // Cek kode unik (kecuali kalau kode sama dengan dirinya sendiri)
+    // Cek kode unik
     if ($error == "") {
         $cekKode = mysqli_query($koneksi, "SELECT id FROM produk WHERE kode='$kode' AND id!=$id");
         if (mysqli_num_rows($cekKode) > 0) {
             $error = "Kode produk sudah digunakan oleh produk lain!";
         }
     }
-
 
     // Validasi gambar baru
     if ($error == "" && $_FILES['gambar']['name'] != "") {
@@ -81,20 +77,16 @@ if (isset($_POST['update'])) {
     // Jika validasi lolos, proses update
     if ($error == "") {
         $gambar_query_part = "";
-        // Jika ada gambar baru yang diupload
         if (!empty($_FILES['gambar']['name'])) {
-            // Hapus gambar lama jika ada
             if (!empty($data['gambar']) && file_exists("uploads/" . $data['gambar'])) {
                 unlink("uploads/" . $data['gambar']);
             }
-            // Buat nama unik dan pindahkan gambar baru
             $gambar_final = uniqid() . '-' . $_FILES['gambar']['name'];
             move_uploaded_file($_FILES['gambar']['tmp_name'], "uploads/" . $gambar_final);
             $gambar_query_part = ", gambar='$gambar_final'";
         }
 
         $query = "UPDATE produk SET kode='$kode', nama='$nama', satuan='$satuan', harga='$harga' $gambar_query_part WHERE id=$id";
-
         mysqli_query($koneksi, $query);
         header("Location: index.php?msg=updated");
         exit;
@@ -115,34 +107,57 @@ if (isset($_POST['update'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Produk</title>
     <link href="modul/node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+
     <style>
         body {
-            background-color: #ffffff;
-            min-height: 100vh;
+            background-color: #ecececff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        /* Main Card */
         .main-card {
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e3f2fd;
             background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
         }
 
-        .form-control {
+        .card-header {
+            background: #ffffff !important;
+            border-bottom: 1px solid #e9ecef !important;
+            padding: 1.5rem;
+        }
+
+        /* Form Styling */
+        .form-control,
+        .form-select {
             border-radius: 8px;
             border: 1.5px solid #e3f2fd;
             padding: 10px 15px;
             transition: all 0.3s ease;
         }
 
-        .form-control:focus {
-            border-color: #2196f3;
-            box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.15);
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2AF598;
+            box-shadow: 0 0 0 0.2rem rgba(42, 245, 152, 0.15);
         }
 
+        .form-label {
+            font-weight: 500;
+            color: #1565c0;
+            margin-bottom: 6px;
+        }
+
+        .input-group-text {
+            background-color: #e3f2fd;
+            border-color: #e3f2fd;
+            color: #1565c0;
+            font-weight: 500;
+        }
+
+        /* Button Styling */
         .btn {
             border-radius: 8px;
             padding: 10px 20px;
@@ -155,14 +170,14 @@ if (isset($_POST['update'])) {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .btn-primary {
-            background-color: #2196f3;
-            border-color: #2196f3;
+        .btn-success {
+            background-color: #4caf50;
+            border-color: #4caf50;
         }
 
-        .btn-primary:hover {
-            background-color: #1976d2;
-            border-color: #1976d2;
+        .btn-success:hover {
+            background-color: #388e3c;
+            border-color: #388e3c;
         }
 
         .btn-danger {
@@ -176,61 +191,16 @@ if (isset($_POST['update'])) {
         }
 
         .btn-secondary {
-            background-color: #90a4ae;
+            background-color: #677175ff;
             border-color: #90a4ae;
         }
 
         .btn-secondary:hover {
-            background-color: #78909c;
+            background-color: #426e85ff;
             border-color: #78909c;
         }
 
-        .page-title {
-            color: #1565c0;
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header-section {
-            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-            margin: -2rem -2rem 2rem -2rem;
-            padding: 2rem;
-            border-radius: 12px 12px 0 0;
-            color: white;
-        }
-
-        .header-section .page-title {
-            color: white;
-            margin-bottom: 0;
-        }
-
-        .header-section p {
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 0;
-        }
-
-        .form-label {
-            font-weight: 500;
-            color: #1565c0;
-            margin-bottom: 6px;
-        }
-
-        .img-preview {
-            border-radius: 8px;
-            border: 2px solid #e3f2fd;
-            transition: all 0.3s ease;
-        }
-
-        .img-preview:hover {
-            border-color: #2196f3;
-        }
-
-        .alert {
-            border-radius: 8px;
-            border: none;
-        }
-
+        /* Upload Area */
         .upload-area {
             border: 2px dashed #2196f3;
             border-radius: 8px;
@@ -246,200 +216,277 @@ if (isset($_POST['update'])) {
             border-color: #1976d2;
         }
 
+        .preview-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #e3f2fd;
+        }
+
+        .img-preview {
+            border-radius: 8px;
+            border: 2px solid #e3f2fd;
+            transition: all 0.3s ease;
+        }
+
+        .img-preview:hover {
+            border-color: #2196f3;
+        }
+
+        /* Alert */
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
         .icon {
             margin-right: 6px;
         }
 
-        .input-group-text {
-            background-color: #e3f2fd;
-            border-color: #e3f2fd;
-            color: #1565c0;
-            font-weight: 500;
+        .current-image-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #e3f2fd;
         }
 
-        /* Mobile only */
+        /* Mobile Responsive */
         @media (max-width: 768px) {
-            .action-buttons .btn-row {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .main-card {
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .btn-secondary {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+
+            /* Tombol Update dan Hapus sejajar di mobile */
+            .action-buttons-mobile {
                 display: flex;
-                justify-content: center;
                 gap: 8px;
-            }
-
-            .btn-delete {
-                border-radius: 20%;
-                width: 45px;
-                height: 45px;
-                padding: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-
-
-            .btn-cancel {
-                display: block;
                 width: 100%;
-                margin-top: 8px;
+            }
+
+            .action-buttons-mobile .btn {
+                flex: 1;
+                font-size: 0.9rem;
+                padding: 10px 12px;
+            }
+
+            .action-buttons-mobile .btn .icon {
+                margin-right: 4px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card main-card">
-                    <div class="card-body p-4">
-                        <div class="header-section">
-                            <h2 class="page-title text-center">
-                                <i class="bi bi-pencil-square icon"></i>Edit Produk
-                            </h2>
-                            <p class="text-center small mb-0">Perbarui informasi produk dengan mudah</p>
+    <!-- Header Section -->
+    <div class="container text-center my-4">
+        <h1 class="display-5 fw-bold text-primary">SmartFarm</h1>
+        <p class="text-muted">Sistem Manajemen Produk Pertanian</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container px-4" style="max-width: 1300px;">
+        <div class="main-card">
+            <div class="card-header">
+                <div class="row align-items-center gy-3">
+                    <div class="col-12 col-md-8 mb-3 text-center text-md-start">
+                        <div class="d-flex align-items-center justify-content-center justify-content-md-start flex-wrap gap-3">
+                            <h4 class="mb-0 fw-bold text-dark">
+                                <i class="bi bi-pencil-square me-2 text-primary"></i>Edit Produk
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="index.php" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Kembali
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <?php if ($error != ""): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle icon"></i>
+                        <?= $error ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
+                <form action="" method="POST" enctype="multipart/form-data" id="productForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-upc-scan icon"></i>Kode Produk
+                            </label>
+                            <input type="text"
+                                name="kode"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['kode']) ?>"
+                                placeholder="Maksimal 20 karakter"
+                                required>
+                            <div class="form-text">Kode harus unik untuk setiap produk</div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-tag icon"></i>Nama Produk
+                            </label>
+                            <input type="text"
+                                name="nama"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['nama']) ?>"
+                                placeholder="Maksimal 100 karakter"
+                                required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-rulers icon"></i>Satuan
+                            </label>
+                            <select name="satuan" class="form-select" required>
+                                <option value="">-- Pilih Satuan --</option>
+                                <option value="pcs" <?= ($data['satuan'] == "pcs") ? "selected" : "" ?>>Pcs</option>
+                                <option value="kg" <?= ($data['satuan'] == "kg") ? "selected" : "" ?>>Kilogram (Kg)</option>
+                                <option value="liter" <?= ($data['satuan'] == "liter") ? "selected" : "" ?>>Liter</option>
+                                <option value="box" <?= ($data['satuan'] == "box") ? "selected" : "" ?>>Box</option>
+                            </select>
+                            <div class="form-text">Pilih satuan produk</div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-currency-dollar icon"></i>Harga
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="number"
+                                    name="harga"
+                                    class="form-control"
+                                    value="<?= $data['harga'] ?>"
+                                    min="1"
+                                    placeholder="0"
+                                    required>
+                            </div>
+                            <div class="form-text">Harga minimal Rp 1, maksimal 10 digit</div>
+                        </div>
+                    </div>
+
+                    <!-- Gambar Saat Ini -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-image icon"></i>Gambar Saat Ini
+                        </label>
+                        <div class="current-image-section">
+                            <div class="text-center">
+                                <?php if (!empty($data['gambar'])): ?>
+                                    <img src="uploads/<?= htmlspecialchars($data['gambar']) ?>"
+                                        class="img-preview mb-2"
+                                        width="200"
+                                        height="200"
+                                        style="object-fit: cover;"
+                                        alt="Gambar Produk">
+                                <?php else: ?>
+                                    <div class="p-4">
+                                        <i class="bi bi-image" style="font-size: 3rem; color: #90a4ae;"></i>
+                                        <p class="text-muted my-2">Belum ada gambar</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Gambar Baru -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-cloud-upload icon"></i>Ganti Gambar (Opsional)
+                        </label>
+                        <div class="upload-area" onclick="$('#gambar').click()">
+                            <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #2196f3;"></i>
+                            <p class="mt-2 mb-1">Klik untuk memilih gambar baru</p>
+                            <small class="text-muted">JPG, JPEG, PNG, GIF • Maksimal 2MB</small>
+                        </div>
+                        <input type="file"
+                            name="gambar"
+                            id="gambar"
+                            class="d-none"
+                            accept="image/*">
+
+                        <div id="previewContainer" class="preview-container mt-3" style="display:none;">
+                            <div class="text-center">
+                                <p class="text-success small mb-2">
+                                    <i class="bi bi-check-circle icon"></i>Preview gambar baru yang akan diupload:
+                                </p>
+                                <img id="preview"
+                                    class="img-preview"
+                                    width="200"
+                                    height="200"
+                                    style="object-fit: cover;">
+                                <div class="mt-2">
+                                    <button type="button"
+                                        id="removePreviewBtn"
+                                        class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-x-circle"></i> Hapus
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="text-center">
+                        <!-- Desktop View -->
+                        <div class="d-none d-md-flex gap-2 justify-content-center flex-wrap">
+                            <button type="submit" name="update" class="btn btn-success">
+                                <i class="bi bi-check-lg icon"></i>Update Produk
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="confirmDelete(<?= $data['id'] ?>)">
+                                <i class="bi bi-trash3 icon"></i>Hapus Produk
+                            </button>
                         </div>
 
-                        <?php if ($error != ""): ?>
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="bi bi-exclamation-triangle icon"></i>
-                                <?= $error ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        <?php endif; ?>
-
-                        <form action="" method="POST" enctype="multipart/form-data">
-                            <div class="row">
-                                <div class="col-md-6 mb-4">
-                                    <label class="form-label">
-                                        <i class="bi bi-upc-scan icon"></i>Kode Produk
-                                    </label>
-                                    <input type="text" name="kode" class="form-control"
-                                        value="<?= htmlspecialchars($data['kode']) ?>"
-                                        placeholder="Maksimal 20 karakter" required>
-                                </div>
-                                <div class="col-md-6 mb-4">
-                                    <label class="form-label">
-                                        <i class="bi bi-tag icon"></i>Nama Produk
-                                    </label>
-                                    <input type="text" name="nama" class="form-control"
-                                        value="<?= htmlspecialchars($data['nama']) ?>"
-                                        placeholder="Maksimal 100 karakter" required>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-4">
-                                    <label class="form-label">
-                                        <i class="bi bi-rulers icon"></i>Satuan
-                                    </label>
-                                    <select name="satuan" class="form-control" required>
-                                        <option value="">-- Pilih Satuan --</option>
-                                        <option value="pcs" <?= ($data['satuan'] == "pcs") ? "selected" : "" ?>>Pcs</option>
-                                        <option value="kg" <?= ($data['satuan'] == "kg") ? "selected" : "" ?>>Kilogram (Kg)</option>
-                                        <option value="liter" <?= ($data['satuan'] == "liter") ? "selected" : "" ?>>Liter</option>
-                                        <option value="box" <?= ($data['satuan'] == "box") ? "selected" : "" ?>>Box</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-md-6 mb-4">
-                                    <label class="form-label">
-                                        <i class="bi bi-currency-dollar icon"></i>Harga
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text" style="border-radius: 8px 0 0 8px;">Rp</span>
-                                        <input type="number" name="harga" class="form-control"
-                                            value="<?= $data['harga'] ?>" min="1"
-                                            placeholder="0" required
-                                            style="border-radius: 0 8px 8px 0;">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label">
-                                    <i class="bi bi-image icon"></i>Gambar Saat Ini
-                                </label>
-                                <div class="text-center">
-                                    <?php if (!empty($data['gambar'])): ?>
-                                        <img src="uploads/<?= htmlspecialchars($data['gambar']) ?>"
-                                            class="img-preview mb-2" width="200" height="200"
-                                            style="object-fit: cover;" alt="Gambar Produk">
-                                    <?php else: ?>
-                                        <div class="p-4" style="background: #f8f9fa; border-radius: 8px;">
-                                            <p class="text-muted my-2">Belum ada gambar</p>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label">
-                                    <i class="bi bi-cloud-upload icon"></i>Ganti Gambar (Opsional)
-                                </label>
-                                <div class="upload-area" onclick="document.getElementById('gambar').click()">
-                                    <i class="bi bi-cloud-upload" style="font-size: 2rem; color: #2196f3;"></i>
-                                    <p class="mt-2 mb-1">Klik untuk memilih file baru</p>
-                                    <small class="text-muted">JPG, JPEG, PNG, GIF • Maksimal 2MB</small>
-                                </div>
-                                <input type="file" name="gambar" id="gambar" class="d-none"
-                                    accept="image/*">
-
-                                <div id="previewContainer" class="mt-3 text-center" style="display:none;">
-                                    <p class="text-success small mb-2">
-                                        <i class="bi bi-check-circle icon"></i>Preview gambar baru:
-                                    </p>
-                                    <img id="preview" class="img-preview" width="200" height="200"
-                                        style="object-fit: cover;">
-                                </div>
-                            </div>
-
-                            <div class="text-center pt-3 action-buttons">
-                                <button type="submit" name="update" class="btn btn-primary me-2 d-none d-md-inline">
-                                    <i class="bi bi-check-lg icon"></i> Update Produk
-                                </button>
-
-                                 <button type="submit" name="update" class="btn btn-primary me-2 d-inline d-md-none">
-                                    <i class="bi bi-check-lg icon"></i> Update
-                                </button>
-
-                                <a href="index.php" class="btn btn-secondary me-2">
-                                    <i class="bi bi-arrow-left icon"></i> Batal
-                                </a>
-
-                                <button type="button" class="btn btn-danger d-none d-md-inline"
-                                    onclick="confirmDelete(<?= $data['id'] ?>)">
-                                    <i class="bi bi-trash3 icon"></i> Hapus
-                                </button>
-
-                                <button type="button" class="btn btn-danger d-inline d-md-none btn-delete"
-                                    onclick="confirmDelete(<?= $data['id'] ?>)">
-                                    <i class="bi bi-trash3"></i>
-                                </button>
-                            </div>
-
-                        </form>
+                        <!-- Mobile View -->
+                        <div class="d-md-none action-buttons-mobile">
+                            <button type="submit" name="update" class="btn btn-success">
+                                <i class="bi bi-check-lg icon"></i>Update
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="confirmDelete(<?= $data['id'] ?>)">
+                                <i class="bi bi-trash3 icon"></i>Hapus
+                            </button>
+                        </div>
                     </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="errorModalLabel">Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="errorModalBody"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
-    
-        <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="errorModalLabel">Error</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body" id="errorModalBody">
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
 
+    <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 12px; border: none;">
@@ -452,67 +499,106 @@ if (isset($_POST['update'])) {
                     <p class="mt-3">Yakin ingin menghapus produk ini secara permanen?</p>
                 </div>
                 <div class="modal-footer border-0 justify-content-center">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        Batal
-                    </button>
-                    <a href="#" id="confirmDeleteBtn" class="btn btn-danger">
-                        Ya, Hapus
-                    </a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <a href="#" id="confirmDeleteBtn" class="btn btn-danger">Ya, Hapus</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        
-        function showErrorModal(message) {
-            $('#errorModalBody').text(message);
-            var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-            errorModal.show();
-        }
+    <script src="modul/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
-        function previewImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    <script>
+        $(document).ready(function() {
+
+            function showErrorModal(message) {
+                $('#errorModalBody').text(message);
+                var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                errorModal.show();
+            }
+
+            // Fungsi untuk preview gambar
+            function previewImage(file) {
+                if (file) {
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
                     if (!allowedTypes.includes(file.type)) {
                         showErrorModal('Hanya file gambar (JPG, JPEG, PNG, GIF) yang diperbolehkan!');
                         $('#gambar').val('');
                         return;
                     }
-                    
+
                     if (file.size > 2 * 1024 * 1024) {
                         showErrorModal('Ukuran file terlalu besar! Maksimal 2MB.');
-                        $('#gambar').val(''); // Reset input file
+                        $('#gambar').val('');
                         return;
                     }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('preview').src = e.target.result;
-                    document.getElementById('previewContainer').style.display = 'block';
-                };
-                reader.readAsDataURL(file);
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#preview').attr('src', e.target.result);
+                        $('#previewContainer').fadeIn();
+                    };
+                    reader.readAsDataURL(file);
+                }
             }
-        }
-        
-        $('#gambar').on('change', function(event) {
-            previewImage(event);
+
+            // Event handler saat memilih file gambar
+            $('#gambar').on('change', function(event) {
+                previewImage(event.target.files[0]);
+            });
+
+            // Fungsi untuk hapus preview
+            $('#removePreviewBtn').on('click', function() {
+                $('#gambar').val('');
+                $('#previewContainer').fadeOut();
+            });
+
+            // Batasi input harga
+            $('input[name="harga"]').on('input', function(e) {
+                let value = $(this).val().replace(/[^\d]/g, '');
+                if (value.length > 10) {
+                    value = value.substring(0, 10);
+                }
+                $(this).val(value);
+            });
+
+            // --- Drag and Drop Area ---
+            const dropArea = $('.upload-area');
+
+            dropArea.on('dragenter dragover dragleave drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            dropArea.on('dragenter dragover', function() {
+                $(this).css({
+                    'border-color': '#1976d2',
+                    'background': '#e8f4fd'
+                });
+            });
+
+            dropArea.on('dragleave drop', function() {
+                $(this).css({
+                    'border-color': '#2196f3',
+                    'background': '#f3f9ff'
+                });
+            });
+
+            dropArea.on('drop', function(e) {
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    $('#gambar').prop('files', files);
+                    previewImage(files[0]);
+                }
+            });
+
         });
 
         function confirmDelete(id) {
             document.getElementById('confirmDeleteBtn').href = 'edit.php?id=' + id + '&delete=' + id;
             new bootstrap.Modal(document.getElementById('deleteModal')).show();
         }
-
-        document.querySelector('input[name="harga"]').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/[^\d]/g, '');
-            if (value.length > 10) {
-                value = value.substring(0, 10);
-            }
-            e.target.value = value;
-        });
     </script>
 </body>
 
