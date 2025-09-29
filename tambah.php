@@ -336,9 +336,25 @@ if (isset($_POST['simpan'])) {
             </div>
         </div>
     </div>
+    
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="errorModalLabel">Error</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="errorModalBody">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script src="modul/js/jquery.min.js"></script>
-    <script src="modul/node_modules/bootstrap.bundle.min.js"></script>
+    <script src="modul/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         // Jalankan script setelah dokumen HTML siap
@@ -346,21 +362,29 @@ if (isset($_POST['simpan'])) {
             
             // Fokus ke input kode saat halaman dimuat
             $('input[name="kode"]').focus();
+            
+            function showErrorModal(message) {
+                $('#errorModalBody').text(message);
+                var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                errorModal.show();
+            }
 
             // Fungsi untuk preview gambar
             function previewImage(file) {
                 if (file) {
-                    if (file.size > 2 * 1024 * 1024) {
-                        alert('Ukuran file terlalu besar! Maksimal 2MB.');
-                        $('#gambar').val(''); // Reset input file
-                        return;
-                    }
                     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
                     if (!allowedTypes.includes(file.type)) {
-                        alert('Format file tidak didukung! Gunakan JPG, JPEG, PNG, atau GIF.');
+                        showErrorModal('Hanya file gambar (JPG, JPEG, PNG, GIF) yang diperbolehkan!');
                         $('#gambar').val('');
                         return;
                     }
+                    
+                    if (file.size > 2 * 1024 * 1024) {
+                        showErrorModal('Ukuran file terlalu besar! Maksimal 2MB.');
+                        $('#gambar').val(''); // Reset input file
+                        return;
+                    }
+
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         $('#preview').attr('src', e.target.result);
@@ -398,7 +422,7 @@ if (isset($_POST['simpan'])) {
                 const harga = $('input[name="harga"]').val();
                 if (!kode || !nama || !satuan || !harga || harga < 1) {
                     e.preventDefault(); // Batalkan submit
-                    alert('Mohon isi semua field yang wajib diisi dengan benar!');
+                    showErrorModal('Mohon isi semua field yang wajib diisi dengan benar!');
                     return false;
                 }
             });

@@ -382,7 +382,7 @@ if (isset($_POST['update'])) {
                                     <small class="text-muted">JPG, JPEG, PNG, GIF • Maksimal 2MB</small>
                                 </div>
                                 <input type="file" name="gambar" id="gambar" class="d-none"
-                                    accept="image/*" onchange="previewImage(event)">
+                                    accept="image/*">
 
                                 <div id="previewContainer" class="mt-3 text-center" style="display:none;">
                                     <p class="text-success small mb-2">
@@ -394,7 +394,6 @@ if (isset($_POST['update'])) {
                             </div>
 
                             <div class="text-center pt-3 action-buttons">
-                                <!-- Tombol Update -->
                                 <button type="submit" name="update" class="btn btn-primary me-2 d-none d-md-inline">
                                     <i class="bi bi-check-lg icon"></i> Update Produk
                                 </button>
@@ -403,18 +402,15 @@ if (isset($_POST['update'])) {
                                     <i class="bi bi-check-lg icon"></i> Update
                                 </button>
 
-                                <!-- Tombol Batal -->
                                 <a href="index.php" class="btn btn-secondary me-2">
                                     <i class="bi bi-arrow-left icon"></i> Batal
                                 </a>
 
-                                <!-- Tombol hapus versi desktop -->
                                 <button type="button" class="btn btn-danger d-none d-md-inline"
                                     onclick="confirmDelete(<?= $data['id'] ?>)">
                                     <i class="bi bi-trash3 icon"></i> Hapus
                                 </button>
 
-                                <!-- Tombol hapus versi mobile (ikon bulat) -->
                                 <button type="button" class="btn btn-danger d-inline d-md-none btn-delete"
                                     onclick="confirmDelete(<?= $data['id'] ?>)">
                                     <i class="bi bi-trash3"></i>
@@ -426,6 +422,22 @@ if (isset($_POST['update'])) {
                 </div>
             </div>
         </div>
+    </div>
+    
+        <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="errorModalLabel">Error</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="errorModalBody">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="modal fade" id="deleteModal" tabindex="-1">
@@ -452,10 +464,30 @@ if (isset($_POST['update'])) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        
+        function showErrorModal(message) {
+            $('#errorModalBody').text(message);
+            var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+            errorModal.show();
+        }
+
         function previewImage(event) {
             const file = event.target.files[0];
             if (file) {
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                    if (!allowedTypes.includes(file.type)) {
+                        showErrorModal('Hanya file gambar (JPG, JPEG, PNG, GIF) yang diperbolehkan!');
+                        $('#gambar').val('');
+                        return;
+                    }
+                    
+                    if (file.size > 2 * 1024 * 1024) {
+                        showErrorModal('Ukuran file terlalu besar! Maksimal 2MB.');
+                        $('#gambar').val(''); // Reset input file
+                        return;
+                    }
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('preview').src = e.target.result;
@@ -464,6 +496,10 @@ if (isset($_POST['update'])) {
                 reader.readAsDataURL(file);
             }
         }
+        
+        $('#gambar').on('change', function(event) {
+            previewImage(event);
+        });
 
         function confirmDelete(id) {
             document.getElementById('confirmDeleteBtn').href = 'edit.php?id=' + id + '&delete=' + id;
