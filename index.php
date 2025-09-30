@@ -1,6 +1,6 @@
-<?php 
+<?php
 session_start(); // <-- Pastikan ini ada di baris paling atas
-include "koneksi.php"; 
+include "koneksi.php";
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -20,12 +20,13 @@ include "koneksi.php";
     }
 
     .product-image.zoomable:hover {
-        transform: scale(1.1);
+      transform: scale(1.1);
     }
-    
+
     #imageModal .modal-body {
-        background-color: #f8f9fa;
+      background-color: #f8f9fa;
     }
+
     /* [END] KODE BARU */
 
     .toast-container {
@@ -143,6 +144,7 @@ include "koneksi.php";
       border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
       overflow: hidden;
+      will-change: transform, opacity;
     }
 
     .card-header {
@@ -187,7 +189,7 @@ include "koneksi.php";
     }
 
     .limit-container {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      background: #ffffff;
       border-radius: 10px;
       padding: 1rem 1.5rem;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -404,32 +406,32 @@ include "koneksi.php";
 
 
   <?php
-    $showAlert = false;
-    $alertType = "";
-    $alertHeading = "";
-    $alertMessage = "";
+  $showAlert = false;
+  $alertType = "";
+  $alertHeading = "";
+  $alertMessage = "";
 
-    if (isset($_SESSION['msg'])) {
-        $showAlert = true;
-        switch ($_SESSION['msg']) {
-            case 'success':
-                $alertType = "success";
-                $alertHeading = "Berhasil!";
-                $alertMessage = "Produk baru telah berhasil ditambahkan.";
-                break;
-            case 'updated':
-                $alertType = "info";
-                $alertHeading = "Update Sukses!";
-                $alertMessage = "Data produk telah berhasil diperbarui.";
-                break;
-            case 'deleted':
-                $alertType = "danger";
-                $alertHeading = "Data Dihapus!";
-                $alertMessage = "Produk telah berhasil dihapus.";
-                break;
-        }
-        unset($_SESSION['msg']);
+  if (isset($_SESSION['msg'])) {
+    $showAlert = true;
+    switch ($_SESSION['msg']) {
+      case 'success':
+        $alertType = "success";
+        $alertHeading = "Berhasil!";
+        $alertMessage = "Produk baru telah berhasil ditambahkan.";
+        break;
+      case 'updated':
+        $alertType = "info";
+        $alertHeading = "Update Sukses!";
+        $alertMessage = "Data produk telah berhasil diperbarui.";
+        break;
+      case 'deleted':
+        $alertType = "danger";
+        $alertHeading = "Data Dihapus!";
+        $alertMessage = "Produk telah berhasil dihapus.";
+        break;
     }
+    unset($_SESSION['msg']);
+  }
 
   $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5;
   $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -459,7 +461,7 @@ include "koneksi.php";
       </div>
     </div>
   <?php endif; ?>
-  
+
   <div class="container px-4" style="max-width: 1300px;">
     <div class="main-card">
       <div class="card-header">
@@ -556,10 +558,6 @@ include "koneksi.php";
                   <option value="50" <?= ($limit == 50) ? 'selected' : '' ?>>50 data</option>
                 </select>
               </div>
-              <div class="text-muted small d-none d-md-block">
-                <i class="bi bi-info-circle me-1"></i>
-                Pilih jumlah data per halaman
-              </div>
               <input type="hidden" name="cari" value="<?= htmlspecialchars($searchTerm) ?>">
             </form>
           </div>
@@ -642,83 +640,20 @@ include "koneksi.php";
 
   <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imageModalLabel">Detail Gambar</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img src="" id="modalImage" class="img-fluid rounded" alt="Gambar Produk">
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="imageModalLabel">Detail Gambar</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+        <div class="modal-body text-center">
+          <img src="" id="modalImage" class="img-fluid rounded" alt="Gambar Produk">
+        </div>
+      </div>
     </div>
   </div>
   <script src="modul/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="modul/js/jquery.min.js"></script>
-
-  <script>
-    $(document).ready(function() {
-
-      const toast = $('.custom-toast');
-      if (toast.length) {
-        setTimeout(function() {
-          toast.addClass('show');
-        }, 100); 
-
-        setTimeout(function() {
-          toast.addClass('hide-up');
-          toast.on('transitionend', function() {
-            $(this).remove();
-          });
-        }, 4000);
-      }
-
-      // [START] KODE JAVASCRIPT BARU UNTUK ZOOM GAMBAR
-      $('#imageModal').on('show.bs.modal', function (event) {
-          // Dapatkan elemen yang memicu modal (gambar yang diklik)
-          var triggerElement = $(event.relatedTarget);
-          
-          // Ekstrak informasi dari atribut data
-          var imageSrc = triggerElement.attr('src');
-          var productName = triggerElement.attr('alt');
-
-          // Perbarui konten modal
-          var modal = $(this);
-          modal.find('.modal-title').text(productName);
-          modal.find('#modalImage').attr('src', imageSrc);
-      });
-      // [END] KODE JAVASCRIPT BARU
-
-      $('.main-card').css('opacity', '0').animate({
-        opacity: 1
-      }, 600);
-
-      $('.table-clean tbody tr').hover(
-        function() {
-          $(this).css({
-            'background-color': '#f8f9fa',
-            'transform': 'scale(1.01)',
-            'transition': 'all 0.3s ease',
-            'box-shadow': '0 2px 8px rgba(0,0,0,0.1)'
-          });
-        },
-        function() {
-          $(this).css({
-            'background-color': '',
-            'transform': 'scale(1)',
-            'box-shadow': ''
-          });
-        }
-      );
-
-      $('.pagination a').on('click', function() {
-        $('html, body').animate({
-          scrollTop: 0
-        }, 300);
-      });
-
-    });
-  </script>
+  <script src="modul/js/index.js"></script>
 </body>
 
 </html>
