@@ -77,7 +77,16 @@ if (isset($_POST['update'])) {
     // Jika validasi lolos, proses update
     if ($error == "") {
         $gambar_query_part = "";
-        if (!empty($_FILES['gambar']['name'])) {
+
+        // Prioritas 1: Cek apakah gambar ditandai untuk dihapus
+        if (isset($_POST['hapus_gambar']) && $_POST['hapus_gambar'] == '1') {
+            if (!empty($data['gambar']) && file_exists("uploads/" . $data['gambar'])) {
+                unlink("uploads/" . $data['gambar']);
+            }
+            $gambar_query_part = ", gambar=''";
+        }
+        // Prioritas 2: Jika tidak, cek apakah ada gambar baru yang di-upload
+        elseif (!empty($_FILES['gambar']['name'])) {
             if (!empty($data['gambar']) && file_exists("uploads/" . $data['gambar'])) {
                 unlink("uploads/" . $data['gambar']);
             }
@@ -110,12 +119,97 @@ if (isset($_POST['update'])) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <style>
+        /* Hide all scrollbars */
+        * {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        *::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        html,
+        body {
+            overflow-x: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
         body {
             background-color: #ecececff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* Main Card */
+        /* [START] CSS BARU UNTUK FITUR HAPUS GAMBAR INTERAKTIF */
+        .image-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .image-wrapper .img-preview {
+            transition: filter 0.3s ease;
+        }
+
+        .image-wrapper.marked-for-deletion .img-preview {
+            filter: blur(4px) brightness(0.7);
+        }
+
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+
+        .delete-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(220, 53, 69, 0.6);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            /* Penting: Overlay tidak bisa diklik */
+            z-index: 5;
+        }
+
+        .image-wrapper.marked-for-deletion .delete-overlay {
+            opacity: 1;
+        }
+
+        .delete-overlay i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* [END] CSS BARU */
+
+        body {
+            background-color: #ecececff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         .main-card {
             background: #ffffff;
             border-radius: 12px;
@@ -129,7 +223,6 @@ if (isset($_POST['update'])) {
             padding: 1.5rem;
         }
 
-        /* Form Styling */
         .form-control,
         .form-select {
             border-radius: 8px;
@@ -157,7 +250,6 @@ if (isset($_POST['update'])) {
             font-weight: 500;
         }
 
-        /* Button Styling */
         .btn {
             border-radius: 8px;
             padding: 10px 20px;
@@ -200,7 +292,6 @@ if (isset($_POST['update'])) {
             border-color: #78909c;
         }
 
-        /* Upload Area */
         .upload-area {
             border: 2px dashed #2196f3;
             border-radius: 8px;
@@ -233,7 +324,6 @@ if (isset($_POST['update'])) {
             border-color: #2196f3;
         }
 
-        /* Alert */
         .alert {
             border-radius: 8px;
             border: none;
@@ -250,7 +340,6 @@ if (isset($_POST['update'])) {
             border: 1px solid #e3f2fd;
         }
 
-        /* Mobile Responsive */
         @media (max-width: 768px) {
             .container {
                 padding-left: 1rem;
@@ -262,12 +351,6 @@ if (isset($_POST['update'])) {
                 margin-right: 0;
             }
 
-            .btn-secondary {
-                font-size: 0.8rem;
-                padding: 6px 12px;
-            }
-
-            /* Tombol Update dan Hapus sejajar di mobile */
             .action-buttons-mobile {
                 display: flex;
                 gap: 8px;
@@ -280,21 +363,31 @@ if (isset($_POST['update'])) {
                 padding: 10px 12px;
             }
 
-            .action-buttons-mobile .btn .icon {
-                margin-right: 4px;
+            .btn-secondary {
+                background-color: #677175ff;
+                border-color: #90a4ae;
+                font-size: 0.8rem;
+                padding: 6px 12px;
+                transform: none;
+            }
+
+            .btn-secondary:focus {
+                background-color: #426e85ff;
+                border-color: #78909c;
+                font-size: 0.8rem;
+                padding: 6px 12px;
+                transform: none;
             }
         }
     </style>
 </head>
 
 <body>
-    <!-- Header Section -->
     <div class="container text-center my-4">
         <h1 class="display-5 fw-bold text-primary">SmartFarm</h1>
         <p class="text-muted">Sistem Manajemen Produk Pertanian</p>
     </div>
 
-    <!-- Main Container -->
     <div class="container px-4" style="max-width: 1300px;">
         <div class="main-card">
             <div class="card-header">
@@ -329,24 +422,14 @@ if (isset($_POST['update'])) {
                             <label class="form-label">
                                 <i class="bi bi-upc-scan icon"></i>Kode Produk
                             </label>
-                            <input type="text"
-                                name="kode"
-                                class="form-control"
-                                value="<?= htmlspecialchars($data['kode']) ?>"
-                                placeholder="Maksimal 20 karakter"
-                                required>
+                            <input type="text" name="kode" class="form-control" value="<?= htmlspecialchars($data['kode']) ?>" placeholder="Maksimal 20 karakter" required>
                             <div class="form-text">Kode harus unik untuk setiap produk</div>
                         </div>
                         <div class="col-md-6 mb-4">
                             <label class="form-label">
                                 <i class="bi bi-tag icon"></i>Nama Produk
                             </label>
-                            <input type="text"
-                                name="nama"
-                                class="form-control"
-                                value="<?= htmlspecialchars($data['nama']) ?>"
-                                placeholder="Maksimal 100 karakter"
-                                required>
+                            <input type="text" name="nama" class="form-control" value="<?= htmlspecialchars($data['nama']) ?>" placeholder="Maksimal 100 karakter" required>
                         </div>
                     </div>
 
@@ -370,19 +453,12 @@ if (isset($_POST['update'])) {
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
-                                <input type="number"
-                                    name="harga"
-                                    class="form-control"
-                                    value="<?= $data['harga'] ?>"
-                                    min="1"
-                                    placeholder="0"
-                                    required>
+                                <input type="number" name="harga" class="form-control" value="<?= $data['harga'] ?>" min="1" placeholder="0" required>
                             </div>
                             <div class="form-text">Harga minimal Rp 1, maksimal 10 digit</div>
                         </div>
                     </div>
 
-                    <!-- Gambar Saat Ini -->
                     <div class="mb-4">
                         <label class="form-label">
                             <i class="bi bi-image icon"></i>Gambar Saat Ini
@@ -390,12 +466,25 @@ if (isset($_POST['update'])) {
                         <div class="current-image-section">
                             <div class="text-center">
                                 <?php if (!empty($data['gambar'])): ?>
-                                    <img src="uploads/<?= htmlspecialchars($data['gambar']) ?>"
-                                        class="img-preview mb-2"
-                                        width="200"
-                                        height="200"
-                                        style="object-fit: cover;"
-                                        alt="Gambar Produk">
+                                    <div class="image-wrapper" id="currentImageWrapper">
+                                        <img src="uploads/<?= htmlspecialchars($data['gambar']) ?>"
+                                            class="img-preview"
+                                            width="200"
+                                            height="200"
+                                            style="object-fit: cover;"
+                                            alt="Gambar Produk">
+
+                                        <button type="button" class="btn btn-sm btn-danger delete-button" id="deleteImageBtn" title="Hapus Gambar Ini">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+
+                                        <div class="delete-overlay" id="deleteOverlay">
+                                            <i class="bi bi-x-circle"></i>
+                                            <span>Gambar akan dihapus</span>
+
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="hapus_gambar" id="hapusGambarInput" value="0">
                                 <?php else: ?>
                                     <div class="p-4">
                                         <i class="bi bi-image" style="font-size: 3rem; color: #90a4ae;"></i>
@@ -405,47 +494,33 @@ if (isset($_POST['update'])) {
                             </div>
                         </div>
                     </div>
-
-                    <!-- Upload Gambar Baru -->
                     <div class="mb-4">
                         <label class="form-label">
-                            <i class="bi bi-cloud-upload icon"></i>Ganti Gambar (Opsional)
+                            <i class="bi bi-cloud-upload icon"></i>Ganti atau Tambah Gambar (Opsional)
                         </label>
                         <div class="upload-area" onclick="$('#gambar').click()">
                             <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #2196f3;"></i>
                             <p class="mt-2 mb-1">Klik untuk memilih gambar baru</p>
                             <small class="text-muted">JPG, JPEG, PNG, GIF • Maksimal 2MB</small>
                         </div>
-                        <input type="file"
-                            name="gambar"
-                            id="gambar"
-                            class="d-none"
-                            accept="image/*">
+                        <input type="file" name="gambar" id="gambar" class="d-none" accept="image/*">
 
                         <div id="previewContainer" class="preview-container mt-3" style="display:none;">
                             <div class="text-center">
                                 <p class="text-success small mb-2">
                                     <i class="bi bi-check-circle icon"></i>Preview gambar baru yang akan diupload:
                                 </p>
-                                <img id="preview"
-                                    class="img-preview"
-                                    width="200"
-                                    height="200"
-                                    style="object-fit: cover;">
+                                <img id="preview" class="img-preview" width="200" height="200" style="object-fit: cover;">
                                 <div class="mt-2">
-                                    <button type="button"
-                                        id="removePreviewBtn"
-                                        class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-x-circle"></i> Hapus
+                                    <button type="button" id="removePreviewBtn" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-x-circle"></i> Batal Pilih
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
                     <div class="text-center">
-                        <!-- Desktop View -->
                         <div class="d-none d-md-flex gap-2 justify-content-center flex-wrap">
                             <button type="submit" name="update" class="btn btn-success">
                                 <i class="bi bi-check-lg icon"></i>Update Produk
@@ -455,7 +530,6 @@ if (isset($_POST['update'])) {
                             </button>
                         </div>
 
-                        <!-- Mobile View -->
                         <div class="d-md-none action-buttons-mobile">
                             <button type="submit" name="update" class="btn btn-success">
                                 <i class="bi bi-check-lg icon"></i>Update
@@ -470,7 +544,6 @@ if (isset($_POST['update'])) {
         </div>
     </div>
 
-    <!-- Error Modal -->
     <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -486,7 +559,6 @@ if (isset($_POST['update'])) {
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 12px; border: none;">
@@ -511,14 +583,47 @@ if (isset($_POST['update'])) {
 
     <script>
         $(document).ready(function() {
+            // [START] JAVASCRIPT BARU UNTUK FUNGSI TOGGLE HAPUS GAMBAR
+            const currentImageWrapper = $('#currentImageWrapper');
+            const hapusGambarInput = $('#hapusGambarInput');
+            const deleteImageBtn = $('#deleteImageBtn');
 
+            // Fungsi untuk mengaktifkan mode hapus
+            function markForDeletion() {
+                currentImageWrapper.addClass('marked-for-deletion');
+                hapusGambarInput.val('1');
+                deleteImageBtn.removeClass('btn-danger').addClass('btn-warning');
+                deleteImageBtn.find('i').removeClass('bi-trash').addClass('bi-arrow-counterclockwise');
+                deleteImageBtn.attr('title', 'Batalkan Hapus Gambar');
+            }
+
+            // Fungsi untuk membatalkan mode hapus
+            function unmarkForDeletion() {
+                currentImageWrapper.removeClass('marked-for-deletion');
+                hapusGambarInput.val('0');
+                deleteImageBtn.removeClass('btn-warning').addClass('btn-danger');
+                deleteImageBtn.find('i').removeClass('bi-arrow-counterclockwise').addClass('bi-trash');
+                deleteImageBtn.attr('title', 'Hapus Gambar Ini');
+            }
+
+            // Event handler untuk tombol hapus (sekarang menjadi toggle)
+            deleteImageBtn.on('click', function() {
+                if (currentImageWrapper.hasClass('marked-for-deletion')) {
+                    unmarkForDeletion(); // Jika sudah ditandai, batalkan
+                } else {
+                    markForDeletion(); // Jika belum, tandai untuk dihapus
+                }
+            });
+            // [END] JAVASCRIPT BARU
+
+            // Fungsi untuk menampilkan modal error
             function showErrorModal(message) {
                 $('#errorModalBody').text(message);
                 var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
                 errorModal.show();
             }
 
-            // Fungsi untuk preview gambar
+            // Fungsi untuk preview gambar baru
             function previewImage(file) {
                 if (file) {
                     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
@@ -527,17 +632,17 @@ if (isset($_POST['update'])) {
                         $('#gambar').val('');
                         return;
                     }
-
                     if (file.size > 2 * 1024 * 1024) {
                         showErrorModal('Ukuran file terlalu besar! Maksimal 2MB.');
                         $('#gambar').val('');
                         return;
                     }
-
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         $('#preview').attr('src', e.target.result);
                         $('#previewContainer').fadeIn();
+                        // Jika memilih gambar baru, otomatis batalkan penghapusan gambar lama
+                        unmarkForDeletion();
                     };
                     reader.readAsDataURL(file);
                 }
@@ -554,37 +659,24 @@ if (isset($_POST['update'])) {
                 $('#previewContainer').fadeOut();
             });
 
-            // Batasi input harga
-            $('input[name="harga"]').on('input', function(e) {
-                let value = $(this).val().replace(/[^\d]/g, '');
-                if (value.length > 10) {
-                    value = value.substring(0, 10);
-                }
-                $(this).val(value);
-            });
-
             // --- Drag and Drop Area ---
             const dropArea = $('.upload-area');
-
             dropArea.on('dragenter dragover dragleave drop', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
             });
-
             dropArea.on('dragenter dragover', function() {
                 $(this).css({
                     'border-color': '#1976d2',
                     'background': '#e8f4fd'
                 });
             });
-
             dropArea.on('dragleave drop', function() {
                 $(this).css({
                     'border-color': '#2196f3',
                     'background': '#f3f9ff'
                 });
             });
-
             dropArea.on('drop', function(e) {
                 const files = e.originalEvent.dataTransfer.files;
                 if (files.length > 0) {
@@ -592,9 +684,9 @@ if (isset($_POST['update'])) {
                     previewImage(files[0]);
                 }
             });
-
         });
 
+        // Fungsi konfirmasi hapus PRODUK
         function confirmDelete(id) {
             document.getElementById('confirmDeleteBtn').href = 'edit.php?id=' + id + '&delete=' + id;
             new bootstrap.Modal(document.getElementById('deleteModal')).show();

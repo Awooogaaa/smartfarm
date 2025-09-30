@@ -10,6 +10,32 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
 
   <style>
+    /* Hide all scrollbars */
+    * {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    *::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+
+    html,
+    body {
+      overflow-x: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+
     body {
       background-color: #ecececff;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -122,6 +148,56 @@
 
     .btn-custom-mobile .hover-state {
       display: none !important;
+    }
+
+    /* Limit Form Styling */
+    .limit-container {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .limit-label {
+      font-weight: 600;
+      color: #495057;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .limit-label i {
+      color: #009BEB;
+    }
+
+    .limit-select {
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      padding: 0.5rem 2.5rem 0.5rem 1rem;
+      font-weight: 500;
+      color: #495057;
+      background-color: #ffffff;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23009BEB' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 16px 12px;
+    }
+
+    .limit-select:hover {
+      border-color: #009BEB;
+      box-shadow: 0 2px 8px rgba(0, 155, 235, 0.15);
+    }
+
+    .limit-select:focus {
+      outline: none;
+      border-color: #2AF598;
+      box-shadow: 0 0 0 3px rgba(42, 245, 152, 0.1);
     }
 
     /* Tombol Tambah Produk (Gaya Asli) */
@@ -272,6 +348,19 @@
         width: 50px;
         height: 50px;
       }
+
+      .limit-container {
+        padding: 0.75rem 1rem;
+      }
+
+      .limit-label {
+        font-size: 0.85rem;
+      }
+
+      .limit-select {
+        padding: 0.4rem 2rem 0.4rem 0.8rem;
+        font-size: 0.9rem;
+      }
     }
 
     /* Untuk desktop, sembunyikan mobile stats badge */
@@ -360,13 +449,13 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- Desktop: Layout asli -->
               <h4 class="mb-0 fw-bold text-dark d-none d-md-block"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Daftar Produk</h4>
               <span class="stats-badge d-none d-md-inline"><i class="bi bi-box me-1"></i>
                 <?= $totalData ?><?= $searchTerm ? " dari $totalProduk" : "" ?> Produk
               </span>
-              
+
               <?php if ($searchTerm) : ?>
                 <span class="badge bg-secondary d-none d-md-inline"><i class="bi bi-search me-1"></i>"<?= htmlspecialchars($searchTerm) ?>"</span>
               <?php endif; ?>
@@ -386,7 +475,7 @@
                 </span>
               </span>
             </a>
-            
+
             <!-- Mobile Button -->
             <div class="d-md-none d-flex justify-content-end w-100">
               <a href="tambah.php" class="btn btn-custom-mobile text-white d-inline-flex align-items-center gap-1" style="text-decoration:none;">
@@ -402,16 +491,23 @@
 
       <div class="card-body p-0">
         <div class="p-3">
-          <form method="GET" action="" id="limit-form" class="d-flex align-items-center">
-            <label for="limit" class="form-label me-2 mb-0">Tampilkan:</label>
-            <select name="limit" id="limit" class="form-select form-select-sm" style="width: auto;" onchange="document.getElementById('limit-form').submit()">
-              <option value="5" <?= ($limit == 5) ? 'selected' : '' ?>>5</option>
-              <option value="10" <?= ($limit == 10) ? 'selected' : '' ?>>10</option>
-              <option value="25" <?= ($limit == 25) ? 'selected' : '' ?>>25</option>
-              <option value="50" <?= ($limit == 50) ? 'selected' : '' ?>>50</option>
-            </select>
-            <input type="hidden" name="cari" value="<?= htmlspecialchars($searchTerm) ?>">
-          </form>
+          <div class="limit-container">
+            <form method="GET" action="" id="limit-form" class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+              <div class="d-flex align-items-center gap-3">
+                <label for="limit" class="limit-label mb-0">
+                  <i class="bi bi-list-ul"></i>
+                  <span>Tampilkan:</span>
+                </label>
+                <select name="limit" id="limit" class="limit-select" onchange="document.getElementById('limit-form').submit()">
+                  <option value="5" <?= ($limit == 5) ? 'selected' : '' ?>>5 data</option>
+                  <option value="10" <?= ($limit == 10) ? 'selected' : '' ?>>10 data</option>
+                  <option value="25" <?= ($limit == 25) ? 'selected' : '' ?>>25 data</option>
+                  <option value="50" <?= ($limit == 50) ? 'selected' : '' ?>>50 data</option>
+                </select>
+              </div>
+              <input type="hidden" name="cari" value="<?= htmlspecialchars($searchTerm) ?>">
+            </form>
+          </div>
         </div>
         <div class="table-responsive">
           <table class="table table-clean align-middle">
