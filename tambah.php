@@ -36,10 +36,10 @@ if (isset($_POST['simpan'])) {
         $tmp    = $_FILES['gambar']['tmp_name'];
         $ukuran = $_FILES['gambar']['size'];
         $ext    = strtolower(pathinfo($gambar, PATHINFO_EXTENSION));
-        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+        $allowed = ['jpg', 'jpeg', 'png'];
 
         if (!in_array($ext, $allowed)) {
-            $error = "Hanya file gambar (JPG, JPEG, PNG, GIF) yang diperbolehkan!";
+            $error = "Hanya file gambar (JPG, JPEG, PNG) yang diperbolehkan!";
         } elseif ($ukuran > 2 * 1024 * 1024) { // 2MB
             $error = "Ukuran gambar maksimal 2MB!";
         }
@@ -361,7 +361,7 @@ if (isset($_POST['simpan'])) {
                         <div class="upload-area" onclick="$('#gambar').click()">
                             <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #2196f3;"></i>
                             <p class="mt-2 mb-1">Klik untuk memilih gambar produk</p>
-                            <small class="text-muted">JPG, JPEG, PNG, GIF • Maksimal 2MB</small>
+                            <small class="text-muted">JPG, JPEG, PNG • Maksimal 2MB</small>
                         </div>
                         <input type="file"
                             name="gambar"
@@ -418,9 +418,14 @@ if (isset($_POST['simpan'])) {
     </div>
 
     <script src="modul/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="modul/js/jquery.min.js"></script>
 
     <script>
+        // Animasi halus saat page load
+        $('.main-card').css('opacity', '0').animate({
+            opacity: 1
+        }, 600);
+
         // Jalankan script setelah dokumen HTML siap
         $(document).ready(function() {
 
@@ -436,9 +441,9 @@ if (isset($_POST['simpan'])) {
             // Fungsi untuk preview gambar
             function previewImage(file) {
                 if (file) {
-                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
                     if (!allowedTypes.includes(file.type)) {
-                        showErrorModal('Hanya file gambar (JPG, JPEG, PNG, GIF) yang diperbolehkan!');
+                        showErrorModal('Hanya file gambar (JPG, JPEG, PNG) yang diperbolehkan!');
                         $('#gambar').val('');
                         return;
                     }

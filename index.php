@@ -152,7 +152,7 @@
 
     /* Limit Form Styling */
     .limit-container {
-      background: #ffffff;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       border-radius: 10px;
       padding: 1rem 1.5rem;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -505,6 +505,10 @@
                   <option value="50" <?= ($limit == 50) ? 'selected' : '' ?>>50 data</option>
                 </select>
               </div>
+              <div class="text-muted small d-none d-md-block">
+                <i class="bi bi-info-circle me-1"></i>
+                Pilih jumlah data per halaman
+              </div>
               <input type="hidden" name="cari" value="<?= htmlspecialchars($searchTerm) ?>">
             </form>
           </div>
@@ -583,6 +587,44 @@
   </div>
 
   <script src="modul/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="modul/js/jquery.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+
+      // Animasi halus saat page load
+      $('.main-card').css('opacity', '0').animate({
+        opacity: 1
+      }, 600);
+
+      // Hover effect untuk baris tabel
+      $('.table-clean tbody tr').hover(
+        function() {
+          $(this).css({
+            'background-color': '#f8f9fa',
+            'transform': 'scale(1.01)',
+            'transition': 'all 0.3s ease',
+            'box-shadow': '0 2px 8px rgba(0,0,0,0.1)'
+          });
+        },
+        function() {
+          $(this).css({
+            'background-color': '',
+            'transform': 'scale(1)',
+            'box-shadow': ''
+          });
+        }
+      );
+
+      // Smooth scroll untuk pagination
+      $('.pagination a').on('click', function() {
+        $('html, body').animate({
+          scrollTop: 0
+        }, 300);
+      });
+
+    });
+  </script>
 </body>
 
 </html>
