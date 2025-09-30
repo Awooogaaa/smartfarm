@@ -1,4 +1,7 @@
-<?php include "koneksi.php"; ?>
+<?php 
+session_start(); // <-- Pastikan ini ada di baris paling atas
+include "koneksi.php"; 
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -10,7 +13,45 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
 
   <style>
-    /* Hide all scrollbars */
+    /* [START] KODE BARU UNTUK ZOOM GAMBAR */
+    .product-image.zoomable {
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out;
+    }
+
+    .product-image.zoomable:hover {
+        transform: scale(1.1);
+    }
+    
+    #imageModal .modal-body {
+        background-color: #f8f9fa;
+    }
+    /* [END] KODE BARU */
+
+    .toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 1090;
+      width: 350px;
+    }
+
+    .custom-toast {
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.4s ease-in-out;
+    }
+
+    .custom-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .custom-toast.hide-up {
+      opacity: 0;
+      transform: translateY(-50px);
+    }
+
     * {
       scrollbar-width: none;
       -ms-overflow-style: none;
@@ -41,7 +82,6 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    /* Navbar & Search */
     .search-input {
       background: #ffffffff;
       color: #495057;
@@ -98,8 +138,6 @@
       box-shadow: 0 2px 8px rgba(255, 0, 25, 0.4);
     }
 
-
-    /* Card & Table */
     .main-card {
       background: #ffffff;
       border-radius: 12px;
@@ -122,7 +160,6 @@
       font-size: 0.9rem;
     }
 
-    /* Mobile stats badge - untuk tampilan di samping judul */
     .mobile-stats-badge {
       background: #e7f3ff;
       color: #0066cc;
@@ -132,7 +169,6 @@
       font-size: 0.75rem;
     }
 
-    /* Mobile button styling - tanpa animasi hover */
     .btn-custom-mobile {
       font-size: 0.8rem;
       padding: 8px 12px;
@@ -150,7 +186,6 @@
       display: none !important;
     }
 
-    /* Limit Form Styling */
     .limit-container {
       background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       border-radius: 10px;
@@ -200,7 +235,6 @@
       box-shadow: 0 0 0 3px rgba(42, 245, 152, 0.1);
     }
 
-    /* Tombol Tambah Produk (Gaya Asli) */
     .btn-custom .hover-state {
       background: #009EFD;
       transform: translateY(100%);
@@ -236,8 +270,6 @@
       box-shadow: 0 3px 10px rgba(13, 202, 240, 0.4);
     }
 
-
-    /* Table Styling */
     .table-clean {
       word-wrap: break-word;
     }
@@ -278,7 +310,6 @@
       font-weight: 600;
     }
 
-    /* --- PENYESUAIAN UNTUK MOBILE --- */
     @media (max-width: 768px) {
       .navbar {
         flex-direction: column;
@@ -292,17 +323,14 @@
         margin-top: 1rem;
       }
 
-      /* Menyembunyikan stats-badge desktop pada mobile */
       .stats-badge {
         display: none !important;
       }
 
-      /* Menampilkan mobile stats badge */
       .mobile-stats-badge {
         display: inline-block !important;
       }
 
-      /* Mobile layout untuk header */
       .mobile-product-header {
         display: flex;
         justify-content: space-between;
@@ -329,15 +357,12 @@
         justify-content: flex-end;
       }
 
-      /* Ukuran font di tabel diperbesar agar lebih jelas */
       .table-clean th,
       .table-clean td {
         font-size: 0.9rem;
         padding: 0.85rem 0.6rem;
-        /* Sedikit padding tambahan */
       }
 
-      /* Ukuran font badge juga disesuaikan */
       .product-code,
       .unit-badge,
       .price-badge {
@@ -363,7 +388,6 @@
       }
     }
 
-    /* Untuk desktop, sembunyikan mobile stats badge */
     @media (min-width: 769px) {
       .mobile-stats-badge {
         display: none !important;
@@ -378,34 +402,65 @@
     <p class="text-muted">Sistem Manajemen Produk Pertanian</p>
   </div>
 
-  <div class="container px-4" style="max-width: 1300px;">
-    <?php
-    // --- PENGATURAN PAGINASI ---
-    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5; // Data per halaman
-    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    $offset = ($page - 1) * $limit;
 
-    // --- PENCARIAN ---
-    $where = "";
-    $searchTerm = "";
-    if (isset($_GET['cari']) && trim($_GET['cari']) != "") {
-      $searchTerm = trim($_GET['cari']);
-      $cari = mysqli_real_escape_string($koneksi, $searchTerm);
-      $where = "WHERE kode LIKE '%$cari%' OR nama LIKE '%$cari%' OR satuan LIKE '%$cari%'";
+  <?php
+    $showAlert = false;
+    $alertType = "";
+    $alertHeading = "";
+    $alertMessage = "";
+
+    if (isset($_SESSION['msg'])) {
+        $showAlert = true;
+        switch ($_SESSION['msg']) {
+            case 'success':
+                $alertType = "success";
+                $alertHeading = "Berhasil!";
+                $alertMessage = "Produk baru telah berhasil ditambahkan.";
+                break;
+            case 'updated':
+                $alertType = "info";
+                $alertHeading = "Update Sukses!";
+                $alertMessage = "Data produk telah berhasil diperbarui.";
+                break;
+            case 'deleted':
+                $alertType = "danger";
+                $alertHeading = "Data Dihapus!";
+                $alertMessage = "Produk telah berhasil dihapus.";
+                break;
+        }
+        unset($_SESSION['msg']);
     }
 
-    // --- QUERY UNTUK MENGHITUNG TOTAL DATA (DENGAN FILTER PENCARIAN) ---
-    $countQuery = mysqli_query($koneksi, "SELECT COUNT(*) as total FROM produk $where");
-    $totalData = mysqli_fetch_assoc($countQuery)['total'];
-    $totalPages = ceil($totalData / $limit);
+  $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5;
+  $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+  $offset = ($page - 1) * $limit;
 
-    // --- QUERY UTAMA UNTUK MENAMPILKAN DATA DENGAN LIMIT DAN OFFSET ---
-    $result = mysqli_query($koneksi, "SELECT * FROM produk $where ORDER BY id DESC LIMIT $limit OFFSET $offset");
+  $where = "";
+  $searchTerm = "";
+  if (isset($_GET['cari']) && trim($_GET['cari']) != "") {
+    $searchTerm = trim($_GET['cari']);
+    $cari = mysqli_real_escape_string($koneksi, $searchTerm);
+    $where = "WHERE kode LIKE '%$cari%' OR nama LIKE '%$cari%' OR satuan LIKE '%$cari%'";
+  }
 
-    $countAll = mysqli_query($koneksi, "SELECT COUNT(*) as total FROM produk");
-    $totalProduk = mysqli_fetch_assoc($countAll)['total'];
-    ?>
+  $countQuery = mysqli_query($koneksi, "SELECT COUNT(*) as total FROM produk $where");
+  $totalData = mysqli_fetch_assoc($countQuery)['total'];
+  $totalPages = ceil($totalData / $limit);
+  $result = mysqli_query($koneksi, "SELECT * FROM produk $where ORDER BY id DESC LIMIT $limit OFFSET $offset");
+  $countAll = mysqli_query($koneksi, "SELECT COUNT(*) as total FROM produk");
+  $totalProduk = mysqli_fetch_assoc($countAll)['total'];
+  ?>
 
+  <?php if ($showAlert) : ?>
+    <div class="toast-container">
+      <div class="alert alert-<?= $alertType ?> custom-toast" role="alert">
+        <h5 class="alert-heading fw-bold"><?= $alertHeading ?></h5>
+        <p class="mb-0"><?= $alertMessage ?></p>
+      </div>
+    </div>
+  <?php endif; ?>
+  
+  <div class="container px-4" style="max-width: 1300px;">
     <div class="main-card">
       <div class="card-header">
         <div class="row align-items-center gy-3 mb-4">
@@ -431,7 +486,6 @@
         <div class="row align-items-center gy-3">
           <div class="col-md-8">
             <div class="d-flex align-items-center flex-wrap gap-3">
-              <!-- Mobile Layout -->
               <div class="mobile-product-header d-md-none w-100">
                 <div class="mobile-title-section">
                   <div class="mobile-title-row">
@@ -450,7 +504,6 @@
                 </div>
               </div>
 
-              <!-- Desktop: Layout asli -->
               <h4 class="mb-0 fw-bold text-dark d-none d-md-block"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Daftar Produk</h4>
               <span class="stats-badge d-none d-md-inline"><i class="bi bi-box me-1"></i>
                 <?= $totalData ?><?= $searchTerm ? " dari $totalProduk" : "" ?> Produk
@@ -462,7 +515,6 @@
             </div>
           </div>
           <div class="col-md-4 text-md-end">
-            <!-- Desktop Button -->
             <a href="tambah.php" class="btn btn-custom text-white position-relative overflow-hidden px-3 d-none d-md-inline-flex align-items-center gap-2" style="background-color:#009BEB; text-decoration:none;">
               <span class="default-state d-flex align-items-center gap-2">
                 <span>Tambah Produk</span>
@@ -476,7 +528,6 @@
               </span>
             </a>
 
-            <!-- Mobile Button -->
             <div class="d-md-none d-flex justify-content-end w-100">
               <a href="tambah.php" class="btn btn-custom-mobile text-white d-inline-flex align-items-center gap-1" style="text-decoration:none;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
@@ -530,28 +581,31 @@
               if ($result && mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
                   echo "<tr>
-                                            <td class='text-center'>
-                                                <a href='edit.php?id=" . $row['id'] . "' class='btn btn-edit btn-sm'>
-                                                    Edit
-                                                </a>
-                                            </td>
-                                            <td>";
+                                              <td class='text-center'>
+                                                  <a href='edit.php?id=" . $row['id'] . "' class='btn btn-edit btn-sm'>
+                                                      Edit
+                                                  </a>
+                                              </td>
+                                              <td>";
 
-                  // Cek apakah ada nama gambar dan file-nya benar-benar ada
                   if (!empty($row['gambar']) && file_exists("uploads/" . $row['gambar'])) {
-                    // Jika ada, tampilkan gambar
-                    echo "<img src='uploads/" . htmlspecialchars($row['gambar']) . "' class='product-image' alt='Gambar " . htmlspecialchars($row['nama']) . "'>";
+                    // --- [START] PERUBAHAN DI SINI ---
+                    echo "<img src='uploads/" . htmlspecialchars($row['gambar']) . "' 
+                                 class='product-image zoomable' 
+                                 alt='" . htmlspecialchars($row['nama']) . "' 
+                                 data-bs-toggle='modal' 
+                                 data-bs-target='#imageModal'>";
+                    // --- [END] PERUBAHAN ---
                   } else {
-                    // Jika tidak ada, tampilkan placeholder "No Img"
                     echo "<div class='product-image d-flex align-items-center justify-content-center bg-light text-muted' style='font-size: 0.8rem; border: 1px solid #dee2e6;'>No Img</div>";
                   }
 
                   echo "</td>
-                                            <td><span class='product-code'>" . htmlspecialchars($row['kode']) . "</span></td>
-                                            <td class='fw-bold'>" . htmlspecialchars($row['nama']) . "</td>
-                                            <td><span class='unit-badge'>" . htmlspecialchars($row['satuan']) . "</span></td>
-                                            <td><span class='price-badge'>Rp " . number_format($row['harga'], 0, ',', '.') . "</span></td>
-                                          </tr>";
+                                              <td><span class='product-code'>" . htmlspecialchars($row['kode']) . "</span></td>
+                                              <td class='fw-bold'>" . htmlspecialchars($row['nama']) . "</td>
+                                              <td><span class='unit-badge'>" . htmlspecialchars($row['satuan']) . "</span></td>
+                                              <td><span class='price-badge'>Rp " . number_format($row['harga'], 0, ',', '.') . "</span></td>
+                                            </tr>";
                 }
               } else {
                 echo "<tr><td colspan='6' class='text-center p-5'>Belum ada produk.</td></tr>";
@@ -586,18 +640,59 @@
     </div>
   </div>
 
+  <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Detail Gambar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="" id="modalImage" class="img-fluid rounded" alt="Gambar Produk">
+            </div>
+        </div>
+    </div>
+  </div>
   <script src="modul/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="modul/js/jquery.min.js"></script>
 
   <script>
     $(document).ready(function() {
 
-      // Animasi halus saat page load
+      const toast = $('.custom-toast');
+      if (toast.length) {
+        setTimeout(function() {
+          toast.addClass('show');
+        }, 100); 
+
+        setTimeout(function() {
+          toast.addClass('hide-up');
+          toast.on('transitionend', function() {
+            $(this).remove();
+          });
+        }, 4000);
+      }
+
+      // [START] KODE JAVASCRIPT BARU UNTUK ZOOM GAMBAR
+      $('#imageModal').on('show.bs.modal', function (event) {
+          // Dapatkan elemen yang memicu modal (gambar yang diklik)
+          var triggerElement = $(event.relatedTarget);
+          
+          // Ekstrak informasi dari atribut data
+          var imageSrc = triggerElement.attr('src');
+          var productName = triggerElement.attr('alt');
+
+          // Perbarui konten modal
+          var modal = $(this);
+          modal.find('.modal-title').text(productName);
+          modal.find('#modalImage').attr('src', imageSrc);
+      });
+      // [END] KODE JAVASCRIPT BARU
+
       $('.main-card').css('opacity', '0').animate({
         opacity: 1
       }, 600);
 
-      // Hover effect untuk baris tabel
       $('.table-clean tbody tr').hover(
         function() {
           $(this).css({
@@ -616,7 +711,6 @@
         }
       );
 
-      // Smooth scroll untuk pagination
       $('.pagination a').on('click', function() {
         $('html, body').animate({
           scrollTop: 0

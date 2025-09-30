@@ -1,4 +1,7 @@
-<?php include "koneksi.php"; ?>
+<?php 
+session_start(); // <-- TAMBAHKAN INI
+include "koneksi.php"; 
+?>
 <?php
 $error = "";
 if (isset($_POST['simpan'])) {
@@ -57,8 +60,11 @@ if (isset($_POST['simpan'])) {
 
         mysqli_query($koneksi, "INSERT INTO produk (kode, nama, satuan, harga, gambar)
                                 VALUES ('$kode', '$nama', '$satuan', '$harga', '$gambar_baru')");
-
-        header("Location: index.php?msg=success");
+        
+        // --- UBAH INI ---
+        $_SESSION['msg'] = 'success'; // Simpan pesan di session
+        header("Location: index.php"); // Redirect tanpa parameter
+        // --- AKHIR PERUBAHAN ---
         exit;
     }
 }
@@ -257,13 +263,11 @@ if (isset($_POST['simpan'])) {
 </head>
 
 <body>
-    <!-- Header Section - Same as index.php -->
     <div class="container text-center my-4">
         <h1 class="display-5 fw-bold text-primary">SmartFarm</h1>
         <p class="text-muted">Sistem Manajemen Produk Pertanian</p>
     </div>
 
-    <!-- Main Container - Same max-width as index.php -->
     <div class="container px-4" style="max-width: 1300px;">
         <div class="main-card">
             <div class="card-header">
@@ -279,10 +283,7 @@ if (isset($_POST['simpan'])) {
                         <a href="index.php" class="btn btn-secondary">
                             <i class="bi bi-arrow-left me-1"></i>Kembali
                         </a>
-                        <!-- <a href="index.php" class="btn btn-secondary d-md-none text-white">
-                            <i class="bi bi-arrow-left me-1"></i>Kembali
-                        </a> -->
-                    </div>
+                        </div>
                 </div>
             </div>
 
@@ -400,7 +401,6 @@ if (isset($_POST['simpan'])) {
         </div>
     </div>
 
-    <!-- Error Modal -->
     <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

@@ -1,4 +1,7 @@
-<?php include "koneksi.php"; ?>
+<?php 
+session_start(); // <-- TAMBAHKAN INI
+include "koneksi.php"; 
+?>
 <?php
 $error = "";
 
@@ -18,7 +21,11 @@ if (isset($_GET['delete'])) {
         unlink("uploads/" . $row['gambar']);
     }
     mysqli_query($koneksi, "DELETE FROM produk WHERE id=$delete_id");
-    header("Location: index.php?msg=deleted");
+
+    // --- UBAH INI ---
+    $_SESSION['msg'] = 'deleted';
+    header("Location: index.php");
+    // --- AKHIR PERUBAHAN ---
     exit;
 }
 
@@ -97,7 +104,11 @@ if (isset($_POST['update'])) {
 
         $query = "UPDATE produk SET kode='$kode', nama='$nama', satuan='$satuan', harga='$harga' $gambar_query_part WHERE id=$id";
         mysqli_query($koneksi, $query);
-        header("Location: index.php?msg=updated");
+
+        // --- UBAH INI ---
+        $_SESSION['msg'] = 'updated';
+        header("Location: index.php");
+        // --- AKHIR PERUBAHAN ---
         exit;
     }
 
